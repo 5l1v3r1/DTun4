@@ -4,12 +4,14 @@ Imports System.Net.Sockets
 Imports System.Net
 Imports System.Text
 Imports PacketDotNet
+Imports System.Security.Cryptography
 Public Class Library
     Dim device As ICaptureDevice
     Public listener As UdpClient = New UdpClient()
     Public groupEP As IPEndPoint
+    Dim source As New IPEndPoint(IPAddress.Any, 4955)
     Public IP As String
-    Public log1 As StreamWriter = New StreamWriter("log.txt", True)
+    Public log1 As StreamWriter '= New StreamWriter("log.txt", True)
 #If DEBUG Then
     Dim remote As String = "192.168.1.2"
 #Else
@@ -20,12 +22,30 @@ Public Class Library
     Public users As String()
     Public oldusers() As String = {""}
     Public conn As Boolean = False
+    Dim serverrsa As New RSACryptoServiceProvider()
+    Dim aespass As String
 
     Dim thr As Threading.Thread
     Sub Main(c As String())
+        If Not log1 Is Nothing Then
+            log1.Close()
+        End If
+        log1 = New StreamWriter("log.txt", True)
+        log1.WriteLine("Preparing...")
         Dim cname As String = c(0)
         Dim nname As String = c(1)
         Dim staticip As Boolean = c(2)
+#If Not Debug Then
+        Dim w As New WebClient
+        remote = w.DownloadString("http://dtun4.disahome.tk/data/ip.txt")
+        serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.tk/data/rsapubkey.txt"))
+        w.Dispose()
+#End If
+        log1.WriteLine("Received IP and public key")
+
+        aespass = RandKey(20)
+
+        log1.WriteLine("Generated AES key")
 
         If staticip Then
             IP = getIP()
@@ -36,13 +56,17 @@ Public Class Library
             IP = "DONOTWANT"
         End If
 
-        log1.WriteLine("Connecting to DTun Server...")
-        groupEP = New IPEndPoint(IPAddress.Parse(remote), 4955)
-        listener.Send(Encoding.Default.GetBytes(String.Format("HELO*{0}*{1}*{2}", cname, nname, IP)), Encoding.Default.GetByteCount(String.Format("HELO*{0}*{1}*{2}", cname, nname, IP)), groupEP)
+        log1.WriteLine("Connecting to DTun4 Server")
 
-        Dim response() As String = Encoding.Default.GetString(listener.Receive(groupEP)).Split("*")
+        groupEP = New IPEndPoint(IPAddress.Parse(remote), 4955)
+        source = groupEP
+        listener.Send(Encoding.Default.GetBytes(String.Format("HELO*{0}*{1}*{2}*{3}", cname, nname, IP, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(System.Text.Encoding.Default.GetBytes(aespass), True)))), Encoding.Default.GetByteCount(String.Format("HELO*{0}*{1}*{2}*{3}", cname, nname, IP, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(System.Text.Encoding.Default.GetBytes(aespass), True)))), groupEP)
+
+        Dim response() As String = Encoding.Default.GetString(listener.Receive(source)).Split({"*"c}, 3)
         IP = response(1)
         users = response(2).Split("^")
+
+
         updateusers = True
         Shell("netsh interface ip set address name=DTun4 source=static address=" & response(1) & " mask=255.0.0.0", AppWinStyle.Hide, True, -1)
         'Dim localIPs As IPAddress() = Dns.GetHostAddresses(Dns.GetHostName())
@@ -67,7 +91,7 @@ Public Class Library
             Dim info() As String = dev.ToString.Split(vbLf)
             For j As Integer = 0 To info.GetUpperBound(0)
                 If info(j).Contains("FriendlyName: ") Then
-                    If info(j).Replace("FriendlyName: ", "") = "DTun4" Then
+                    If info(j).Replace("FriendlyName: ", "").StartsWith("DTun4") Then
                         chdev = i + 1
                         Exit For
                     End If
@@ -106,9 +130,9 @@ Public Class Library
     Sub SDTun()
         Try
             log1.Flush()
-            'log1.Close()
             thr.Abort()
             device.StopCapture()
+            'log1.Close()
         Catch
         End Try
     End Sub
@@ -120,18 +144,11 @@ Public Class Library
         Dim pack As Packet = PacketDotNet.Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data)
         Dim ip1 As IpPacket = IpPacket.GetEncapsulated(pack)
         Dim arp As ARPPacket = ARPPacket.GetEncapsulated(pack)
-        Dim icmp As ICMPv4Packet = ICMPv4Packet.GetEncapsulated(pack)
 
         If (Not ip1 Is Nothing) Then
             ParseTCPIP(pack, packet)
-        End If
-
-        If (Not arp Is Nothing) Then
+        ElseIf (Not arp Is Nothing) Then
             ParseARP(pack, packet)
-        End If
-
-        If (Not icmp Is Nothing) Then
-            log1.WriteLine("ICMP NOT IMPLEMENTED!")
         End If
 
 
@@ -145,46 +162,56 @@ Public Class Library
 
     Sub ReceivePacket()
         While True
-            Dim packet As Byte() = listener.Receive(groupEP)
-
-            If (Encoding.Default.GetString(packet).StartsWith("KFINE")) Then
-                users = Encoding.Default.GetString(packet).Substring(5).Split("^")
-                If Not DirectCast(oldusers, IStructuralEquatable).Equals(users, StructuralComparisons.StructuralEqualityComparer) Then
-                    oldusers = users
-                    updateusers = True
+            Try
+                source = groupEP
+                Dim packet As Byte() = listener.Receive(source)
+                Dim message As String = Encoding.Default.GetString(packet)
+                If (message.StartsWith("KFINE")) Then
+                    users = Encoding.Default.GetString(packet).Substring(5).Split("^")
+                    If Not DirectCast(oldusers, IStructuralEquatable).Equals(users, StructuralComparisons.StructuralEqualityComparer) Then
+                        oldusers = users
+                        updateusers = True
+                    End If
+                    Continue While
                 End If
-            End If
-            If (Encoding.Default.GetString(packet).StartsWith("RECONNPLS")) Then
-                conn = False
-                thr.Abort()
-                device.StopCapture()
-            End If
-
-            Dim pack As Packet = PacketDotNet.Packet.ParsePacket(LinkLayers.Ethernet, packet)
-            Dim ip1 As IpPacket = IpPacket.GetEncapsulated(pack)
-            Dim arp As ARPPacket = ARPPacket.GetEncapsulated(pack)
-
-
-            If (Not ip1 Is Nothing) Then
-                'If ip1.DestinationAddress.Equals(IPAddress.Parse(IP)) Then
-                device.SendPacket(packet)
-                log1.WriteLine("Created IP packet from {0}", ip1.SourceAddress.ToString)
-                'Else
-                ' log1.WriteLine("Received IP packed intended to another device. Skipped.")
-                'End If
-            End If
-
-            If (Not arp Is Nothing) Then
-                'If arp.TargetProtocolAddress.ToString = IP Then
-                device.SendPacket(packet)
-                log1.WriteLine("Created ARP packet from {0}", arp.SenderProtocolAddress.ToString)
-                'Else
-                'log1.WriteLine("Received ARP packed intended to another device. Skipped.")
-                'End If
-            End If
+                If (Encoding.Default.GetString(packet).StartsWith("RECONNPLS")) Then
+                    conn = False
+                    thr.Abort()
+                    device.StopCapture()
+                    Exit Sub
+                End If
+                packet = AES_Decrypt(packet)
+                If packet Is {0} Then
+                    Continue While
+                End If
+                Dim pack As Packet = PacketDotNet.Packet.ParsePacket(LinkLayers.Ethernet, packet)
+                Dim ip1 As IpPacket = IpPacket.GetEncapsulated(pack)
+                Dim arp As ARPPacket = ARPPacket.GetEncapsulated(pack)
 
 
-            log1.Flush()
+
+                If (Not ip1 Is Nothing) Then
+                    'If ip1.DestinationAddress.Equals(IPAddress.Parse(IP)) Then
+                    device.SendPacket(packet)
+                    log1.WriteLine("Created IP packet from {0}", ip1.SourceAddress.ToString)
+                    'Else
+                    ' log1.WriteLine("Received IP packed intended to another device. Skipped.")
+                    'End If
+                End If
+
+                If (Not arp Is Nothing) Then
+                    'If arp.TargetProtocolAddress.ToString = IP Then
+                    device.SendPacket(packet)
+                    log1.WriteLine("Created ARP packet from {0}", arp.SenderProtocolAddress.ToString)
+                    'Else
+                    'log1.WriteLine("Received ARP packed intended to another device. Skipped.")
+                    'End If
+                End If
+
+
+                log1.Flush()
+            Catch e As Exception
+            End Try
         End While
     End Sub
 
@@ -196,6 +223,7 @@ Public Class Library
             'If Not ip1.DestinationAddress.Equals(IPAddress.Parse(IP)) And Not ip1.DestinationAddress.Equals(IPAddress.Parse("31.255.255.255")) Then
             If ip1.SourceAddress.Equals(IPAddress.Parse(IP)) Then
                 Dim groupEP As New IPEndPoint(IPAddress.Parse(remote), 4955)
+                Packet = AES_Encrypt(Packet)
                 listener.Send(Packet, Packet.Count(), groupEP)
                 log1.WriteLine("Sent to {0}", ip1.DestinationAddress.ToString)
             Else
@@ -214,24 +242,78 @@ Public Class Library
         'If Not arp.TargetProtocolAddress.ToString = IP Then
         If arp.SenderProtocolAddress.ToString = IP Then
             Dim groupEP As New IPEndPoint(IPAddress.Parse(remote), 4955)
-            listener.Send(Packet, Packet.Count(), groupEP)
+            listener.Send(AES_Encrypt(Packet), AES_Encrypt(Packet).Count(), groupEP)
             log1.WriteLine("Sent to {0}", arp.TargetProtocolAddress.ToString)
         Else
             log1.WriteLine("Local packet. Skipped")
         End If
     End Sub
 
-    Sub ParseICMP(pack As Packet, Packet As Byte())
-        Dim icmp As ICMPv4Packet = ICMPv4Packet.GetEncapsulated(pack)
-        log1.Write("ICMP packet: ")
-        'And arp.SenderProtocolAddress.ToString = IP
-        'If Not arp.TargetProtocolAddress.ToString = IP Then
-        If IP Then
-            Dim groupEP As New IPEndPoint(IPAddress.Parse(remote), 4955)
-            listener.Send(Packet, Packet.Count(), groupEP)
-            'log1.WriteLine("Sent to {0}", icmp.TargetProtocolAddress.ToString)
-        Else
-            log1.WriteLine("Local packet. Skipped")
+
+    Public Function AES_Decrypt(ByVal in1 As Byte(), Optional ByVal pass As String = "") As Byte()
+        Dim input As String = Convert.ToBase64String(in1)
+
+        If pass = "" Then
+            pass = aespass
         End If
-    End Sub
+        Dim AES As New System.Security.Cryptography.RijndaelManaged
+        Dim Hash_AES As New System.Security.Cryptography.MD5CryptoServiceProvider
+        Dim decrypted As String = ""
+        Try
+            Dim hash(31) As Byte
+            Dim temp As Byte() = Hash_AES.ComputeHash(System.Text.ASCIIEncoding.ASCII.GetBytes(pass))
+            Array.Copy(temp, 0, hash, 0, 16)
+            Array.Copy(temp, 0, hash, 15, 16)
+            AES.Key = hash
+            AES.Mode = CipherMode.ECB
+            Dim DESDecrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateDecryptor
+            Dim Buffer As Byte() = Convert.FromBase64String(Input)
+            decrypted = System.Text.ASCIIEncoding.ASCII.GetString(DESDecrypter.TransformFinalBlock(Buffer, 0, Buffer.Length))
+            Return Convert.FromBase64String(decrypted)
+        Catch ex As Exception
+            Return {0}
+        End Try
+    End Function
+    Public Function AES_Encrypt(ByVal in1 As Byte(), Optional ByVal pass As String = "") As Byte()
+        Dim input As String = Convert.ToBase64String(in1)
+
+        If pass = "" Then
+            pass = aespass
+        End If
+        Dim AES As New System.Security.Cryptography.RijndaelManaged
+        Dim Hash_AES As New System.Security.Cryptography.MD5CryptoServiceProvider
+        Dim encrypted As String = ""
+        Try
+            Dim hash(31) As Byte
+            Dim temp As Byte() = Hash_AES.ComputeHash(System.Text.ASCIIEncoding.ASCII.GetBytes(pass))
+            Array.Copy(temp, 0, hash, 0, 16)
+            Array.Copy(temp, 0, hash, 15, 16)
+            AES.Key = hash
+            AES.Mode = CipherMode.ECB
+            Dim DESEncrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateEncryptor
+            Dim Buffer As Byte() = System.Text.ASCIIEncoding.ASCII.GetBytes(Input)
+            encrypted = Convert.ToBase64String(DESEncrypter.TransformFinalBlock(Buffer, 0, Buffer.Length))
+            Return Convert.FromBase64String(encrypted)
+        Catch ex As Exception
+            Return {0}
+        End Try
+    End Function
+
+
+    Public Function Rand(ByVal Min As Integer, ByVal Max As Integer) As Integer
+        Static Generator As System.Random = New System.Random()
+        Return Generator.Next(Min, Max)
+    End Function
+
+    Function RandKey(RequiredStringLength As Integer) As String
+        Dim CharArray() As Char = "12345ABCDEFGHIJKLMNOPQRSTUVWXYZ67890".ToCharArray
+        Dim sb As New System.Text.StringBuilder
+
+        For index As Integer = 1 To RequiredStringLength
+            sb.Append(CharArray(Rand(0, CharArray.Length)))
+        Next
+
+        Return sb.ToString
+
+    End Function
 End Class

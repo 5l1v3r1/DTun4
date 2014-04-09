@@ -1,12 +1,15 @@
 ﻿Imports System.Net.Sockets
 Imports System.Net
 Imports System.Text
+Imports System.Security.Cryptography
+
 Class Client
     Private ipadd As String
     Private ep As IPEndPoint
     Private nname As String
     Private net As String
     Private timeout As Integer
+    Private aes As String
     Property IP() As String
         Get
             Return ipadd
@@ -47,12 +50,20 @@ Class Client
             timeout = value
         End Set
     End Property
-    Sub New(a1 As String, a2 As IPEndPoint, a3 As String, a4 As String)
+    Public Function Encrypt(str As Byte()) As Byte()
+        Return AES_Encrypt(str, aes)
+    End Function
+    Public Function Decrypt(str As Byte()) As Byte()
+        Return AES_Decrypt(str, aes)
+    End Function
+
+    Sub New(a1 As String, a2 As IPEndPoint, a3 As String, a4 As String, AESKEY As String)
         ipadd = a1
         ep = a2
         nname = a3
         net = a4
         timeout = 5
+        aes = AESKEY
     End Sub
 End Class
 Module Server
@@ -63,6 +74,13 @@ Module Server
     Dim networks As New Dictionary(Of String, List(Of Client))
 
     Sub Main()
+        Dim rsa As New RSACryptoServiceProvider()
+        'Dim publickey As String = rsa.ToXmlString(True)
+        'Console.WriteLine(publickey) 'DEBUG
+        'publickey = rsa.ToXmlString(False)
+        'Console.WriteLine(publickey) 'DEBUG
+        rsa.FromXmlString(System.IO.File.ReadAllText("priv.key"))
+
         groupEP = New IPEndPoint(IPAddress.Any, 4955)
         Dim timer As New System.Timers.Timer
         timer.Interval = 5000
@@ -71,15 +89,26 @@ Module Server
         timer.Start()
         timer.Enabled = True
 
+
         While True
             Try
                 Try
                     source = groupEP
                     Dim packet As Byte() = listener.Receive(source)
                     If Not clients.Contains(source) Then
-                        clients.Add(source)
-                        Dim response As String() = Encoding.Default.GetString(packet).Split("*")
-                        If Not response.GetUpperBound(0) = 3 Then
+                        If Not clients.Contains(source) Then
+                            clients.Add(source)
+                        Else
+                            Dim netname As String = FindNetwork(source)
+                            For i As Integer = 0 To networks(netname).Count - 1
+                                If networks(netname).ElementAt(i).EndP.Equals(source) Then
+                                    networks(netname).RemoveAt(i)
+                                    Exit For
+                                End If
+                            Next
+                        End If
+                        Dim response As String() = Encoding.Default.GetString(packet).Split({"*"c}, 5)
+                        If Not response.GetUpperBound(0) = 4 Then
                             listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), source)
                             Continue While
                         End If
@@ -92,15 +121,16 @@ Module Server
                         Else
                             newip = response(3)
                         End If
-                        networks(response(2)).Add(New Client(newip, source, response(1), response(2)))
+
+                        networks(response(2)).Add(New Client(newip, source, response(1), response(2), System.Text.Encoding.Default.GetString(rsa.Decrypt(System.Text.Encoding.Default.GetBytes(response(4)), True))))
                         Dim mess As String = "HELO*" & newip & "*"
                         For k As Integer = 0 To networks(response(2)).Count - 1
                             mess &= networks(response(2))(k).Name & ":" & networks(response(2))(k).IP & "^"
                         Next
-
+                        ' mess &= "*" & rsa.ToXmlString(False)
                         listener.Send(Encoding.Default.GetBytes(mess), Encoding.Default.GetByteCount(mess), source)
 
-                        Console.WriteLine("Added client")
+                        Console.WriteLine("Added client from: " & source.Address.ToString & ":" & source.Port.ToString)
                         Continue While
                     End If
                     Dim net As String = FindNetwork(source)
@@ -122,11 +152,14 @@ Module Server
                         Console.Write("*")
                         Continue While
                     End If
-
+                    'Dim cl As Client = FindClient(source)
+                    Dim pack As Byte() = FindClient(source).Decrypt(packet)
                     For j As Integer = 0 To networks(net).Count - 1
                         If Not networks(net)(j).EndP.Equals(source) Then
+                            Dim cl As Client = networks(net)(j)
                             Try
-                                listener.Send(packet, packet.Count(), networks(net)(j).EndP)
+                                listener.Send(cl.Encrypt(pack), cl.Encrypt(pack).Count(), networks(net)(j).EndP)
+                                'listener.Send(packet, packet.Count(), networks(net)(j).EndP)
                             Catch ex As System.Net.Sockets.SocketException
                                 clients.Remove(networks(net)(j).EndP)
                                 networks(net).Remove(networks(net)(j))
@@ -160,6 +193,16 @@ Module Server
         Next
         Return "none"
     End Function
+    Function FindClient(cl As IPEndPoint) As Client
+        For i As Integer = 0 To networks.Count - 1
+            For j As Integer = 0 To networks.ElementAt(i).Value.Count - 1
+                If networks.ElementAt(i).Value(j).EndP.Equals(cl) Then
+                    Return networks.ElementAt(i).Value(j)
+                End If
+            Next
+        Next
+        Return Nothing
+    End Function
     Sub Status()
 
         For i As Integer = 0 To networks.Count - 1
@@ -179,13 +222,52 @@ Module Server
 
                     Continue For
                 End If
-                'If networks.ElementAt(i).Value.ElementAt(j).Time < 3 Then
-                '    networks(networks.ElementAt(i).Key).ElementAt(j).Time -= 1
-                '    listener.Send(Encoding.Default.GetBytes("STATUS"), Encoding.Default.GetByteCount("STATUS"), networks.ElementAt(i).Value.ElementAt(j).EndP)
-                '    Continue For
-                'End If
             Next
         Next
     End Sub
+
+    Public Function AES_Decrypt(ByVal in1 As Byte(), ByVal pass As String) As Byte()
+        Dim input As String = Convert.ToBase64String(in1)
+
+        Dim AES As New System.Security.Cryptography.RijndaelManaged
+        Dim Hash_AES As New System.Security.Cryptography.MD5CryptoServiceProvider
+        Dim decrypted As String = ""
+        Try
+            Dim hash(31) As Byte
+            Dim temp As Byte() = Hash_AES.ComputeHash(System.Text.ASCIIEncoding.ASCII.GetBytes(pass))
+            Array.Copy(temp, 0, hash, 0, 16)
+            Array.Copy(temp, 0, hash, 15, 16)
+            AES.Key = hash
+            AES.Mode = CipherMode.ECB
+            Dim DESDecrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateDecryptor
+            Dim Buffer As Byte() = Convert.FromBase64String(input)
+            decrypted = System.Text.ASCIIEncoding.ASCII.GetString(DESDecrypter.TransformFinalBlock(Buffer, 0, Buffer.Length))
+            Return Convert.FromBase64String(decrypted)
+        Catch ex As Exception
+            Return {0}
+        End Try
+    End Function
+    Public Function AES_Encrypt(ByVal in1 As Byte(), ByVal pass As String) As Byte()
+        Dim input As String = Convert.ToBase64String(in1)
+
+
+        Dim AES As New System.Security.Cryptography.RijndaelManaged
+        Dim Hash_AES As New System.Security.Cryptography.MD5CryptoServiceProvider
+        Dim encrypted As String = ""
+        Try
+            Dim hash(31) As Byte
+            Dim temp As Byte() = Hash_AES.ComputeHash(System.Text.ASCIIEncoding.ASCII.GetBytes(pass))
+            Array.Copy(temp, 0, hash, 0, 16)
+            Array.Copy(temp, 0, hash, 15, 16)
+            AES.Key = hash
+            AES.Mode = CipherMode.ECB
+            Dim DESEncrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateEncryptor
+            Dim Buffer As Byte() = System.Text.ASCIIEncoding.ASCII.GetBytes(input)
+            encrypted = Convert.ToBase64String(DESEncrypter.TransformFinalBlock(Buffer, 0, Buffer.Length))
+            Return Convert.FromBase64String(encrypted)
+        Catch ex As Exception
+            Return {0}
+        End Try
+    End Function
 
 End Module
