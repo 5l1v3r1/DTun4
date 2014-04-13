@@ -24,6 +24,10 @@ Public Class Library
     Public conn As Boolean = False
     Dim serverrsa As New RSACryptoServiceProvider()
     Dim aespass As String
+    Public state As Integer = 0
+
+    Public chatlines As New List(Of String)
+    Dim chatsender As New UdpClient()
 
     Dim thr As Threading.Thread
     Sub Main(c As String())
@@ -36,16 +40,36 @@ Public Class Library
         Dim nname As String = c(1)
         Dim staticip As Boolean = c(2)
 #If Not Debug Then
-        Dim w As New WebClient
-        remote = w.DownloadString("http://dtun4.disahome.tk/data/ip.txt")
-        serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.tk/data/rsapubkey.txt"))
+        Dim w As New MyWebClient
+        w.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11")
+        'remote = w.DownloadString("http://dtun4.disahome.tk/data/ip.txt")
+        remote = Dns.GetHostEntry("apps.disahome.tk").AddressList(0).ToString
+        Try
+            serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.tk/data/rsapubkey.txt"))
+        Catch
+            Try
+                serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.tk/data/rsapubkey.txt"))
+            Catch
+                Try
+                    serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.tk/data/rsapubkey.txt"))
+                Catch
+                    state = 7
+                    MsgBox("Can't download server public RSA key.")
+                    Exit Sub
+                End Try
+            End Try
+        End Try
         w.Dispose()
 #End If
         log1.WriteLine("Received IP and public key")
+        state = 1
+        Threading.Thread.Sleep(450)
 
         aespass = RandKey(20)
 
         log1.WriteLine("Generated AES key")
+        state = 2
+        Threading.Thread.Sleep(450)
 
         If staticip Then
             IP = getIP()
@@ -57,6 +81,8 @@ Public Class Library
         End If
 
         log1.WriteLine("Connecting to DTun4 Server")
+        state = 3
+        Threading.Thread.Sleep(700)
 
         groupEP = New IPEndPoint(IPAddress.Parse(remote), 4955)
         source = groupEP
@@ -86,6 +112,9 @@ Public Class Library
         'Dim log As String = ""
         log1.WriteLine("Connected with server")
         log1.WriteLine("Scanning for network devices...")
+        state = 4
+        Threading.Thread.Sleep(600)
+
         Dim i As Integer = -1
         For Each dev As ICaptureDevice In devices
             Dim info() As String = dev.ToString.Split(vbLf)
@@ -102,9 +131,12 @@ Public Class Library
         Next
         If chdev = -1 Then
             log1.WriteLine("DTun adapter was not found. Try reinstalling it.")
+            state = 7
             Exit Sub
         End If
         log1.WriteLine("Device found. Connecting...")
+        state = 5
+        Threading.Thread.Sleep(500)
 
 
         device = devices(chdev)
@@ -115,11 +147,12 @@ Public Class Library
         log1.WriteLine("Connected with device.")
         log1.WriteLine("Working...")
         log1.WriteLine()
+        state = 6
         conn = True
         log1.Flush()
         'Console.ReadLine()
     End Sub
-    Function getIP()
+    Public Shared Function getIP()
         Dim strHostName As String = System.Net.Dns.GetHostName()
         For i As Integer = 0 To System.Net.Dns.GetHostByName(strHostName).AddressList.Count - 1
             If System.Net.Dns.GetHostByName(strHostName).AddressList(0).ToString().StartsWith("31.") Then
@@ -160,6 +193,11 @@ Public Class Library
         log1.Flush()
     End Sub
 
+    Sub SendMessage(mes As String)
+        chatsender.Send(System.Text.Encoding.Default.GetBytes("CHAT" & mes), System.Text.Encoding.Default.GetByteCount("CHAT" & mes), New IPEndPoint(IPAddress.Parse("31.255.255.255"), 4956))
+        chatlines.Add("You: " & mes)
+    End Sub
+
     Sub ReceivePacket()
         While True
             Try
@@ -181,6 +219,9 @@ Public Class Library
                     Exit Sub
                 End If
                 packet = AES_Decrypt(packet)
+
+                
+
                 If packet Is {0} Then
                     Continue While
                 End If
@@ -188,10 +229,18 @@ Public Class Library
                 Dim ip1 As IpPacket = IpPacket.GetEncapsulated(pack)
                 Dim arp As ARPPacket = ARPPacket.GetEncapsulated(pack)
 
-
+                
 
                 If (Not ip1 Is Nothing) Then
                     'If ip1.DestinationAddress.Equals(IPAddress.Parse(IP)) Then
+
+                    message = Encoding.Default.GetString(packet)
+                    If message.Contains("CHAT") Then
+                        chatlines.Add(ip1.SourceAddress.ToString & ":" & message.Substring(message.IndexOf("C")).Replace("CHAT", ""))
+                        log1.WriteLine("Created chat message from {0}", ip1.SourceAddress.ToString)
+                        Continue While
+                    End If
+
                     device.SendPacket(packet)
                     log1.WriteLine("Created IP packet from {0}", ip1.SourceAddress.ToString)
                     'Else
@@ -249,6 +298,7 @@ Public Class Library
         End If
     End Sub
 
+    
 
     Public Function AES_Decrypt(ByVal in1 As Byte(), Optional ByVal pass As String = "") As Byte()
         Dim input As String = Convert.ToBase64String(in1)
@@ -306,7 +356,7 @@ Public Class Library
     End Function
 
     Function RandKey(RequiredStringLength As Integer) As String
-        Dim CharArray() As Char = "12345ABCDEFGHIJKLMNOPQRSTUVWXYZ67890".ToCharArray
+        Dim CharArray() As Char = "12345ABCDEFGHIJKLMNOPQRSTUVWXYZ67890abcdefghijklmnopqrstuvwxyz".ToCharArray
         Dim sb As New System.Text.StringBuilder
 
         For index As Integer = 1 To RequiredStringLength
@@ -315,5 +365,16 @@ Public Class Library
 
         Return sb.ToString
 
+    End Function
+End Class
+
+Class MyWebClient
+    Inherits WebClient
+
+    Protected Overrides Function GetWebRequest(uri As Uri) As WebRequest
+
+        Dim w As WebRequest = MyBase.GetWebRequest(uri)
+        w.Timeout = 6000
+        Return w
     End Function
 End Class

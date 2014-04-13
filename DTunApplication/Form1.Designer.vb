@@ -42,6 +42,13 @@ Partial Class Form1
         Me.Label9 = New System.Windows.Forms.Label()
         Me.CheckBox1 = New System.Windows.Forms.CheckBox()
         Me.NotifyIcon1 = New System.Windows.Forms.NotifyIcon(Me.components)
+        Me.ProgressBar1 = New System.Windows.Forms.ProgressBar()
+        Me.Timer3 = New System.Windows.Forms.Timer(Me.components)
+        Me.Button2 = New System.Windows.Forms.Button()
+        Me.client = New System.Windows.Forms.ContextMenuStrip(Me.components)
+        Me.ping = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
+        Me.client.SuspendLayout()
         Me.SuspendLayout()
         '
         'TextBox1
@@ -63,7 +70,7 @@ Partial Class Form1
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(10, 136)
+        Me.Label2.Location = New System.Drawing.Point(10, 166)
         Me.Label2.Name = "Label2"
         Me.Label2.Size = New System.Drawing.Size(95, 13)
         Me.Label2.TabIndex = 2
@@ -72,16 +79,17 @@ Partial Class Form1
         'ListBox1
         '
         Me.ListBox1.FormattingEnabled = True
-        Me.ListBox1.Location = New System.Drawing.Point(10, 152)
+        Me.ListBox1.Location = New System.Drawing.Point(13, 182)
         Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.Size = New System.Drawing.Size(268, 212)
+        Me.ListBox1.Size = New System.Drawing.Size(264, 212)
         Me.ListBox1.TabIndex = 3
+        Me.ToolTip1.SetToolTip(Me.ListBox1, "Click to copy IP to clipboard")
         '
         'Button1
         '
-        Me.Button1.Location = New System.Drawing.Point(202, 65)
+        Me.Button1.Location = New System.Drawing.Point(13, 81)
         Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(75, 23)
+        Me.Button1.Size = New System.Drawing.Size(264, 23)
         Me.Button1.TabIndex = 4
         Me.Button1.Text = "Connect"
         Me.Button1.UseVisualStyleBackColor = True
@@ -99,13 +107,13 @@ Partial Class Form1
         '
         Me.TextBox2.Location = New System.Drawing.Point(129, 13)
         Me.TextBox2.Name = "TextBox2"
-        Me.TextBox2.Size = New System.Drawing.Size(149, 20)
+        Me.TextBox2.Size = New System.Drawing.Size(148, 20)
         Me.TextBox2.TabIndex = 6
         '
         'Label4
         '
         Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(10, 94)
+        Me.Label4.Location = New System.Drawing.Point(12, 107)
         Me.Label4.Name = "Label4"
         Me.Label4.Size = New System.Drawing.Size(40, 13)
         Me.Label4.TabIndex = 7
@@ -114,7 +122,7 @@ Partial Class Form1
         'Label5
         '
         Me.Label5.AutoSize = True
-        Me.Label5.Location = New System.Drawing.Point(56, 94)
+        Me.Label5.Location = New System.Drawing.Point(58, 107)
         Me.Label5.Name = "Label5"
         Me.Label5.Size = New System.Drawing.Size(73, 13)
         Me.Label5.TabIndex = 8
@@ -122,7 +130,7 @@ Partial Class Form1
         '
         'Timer1
         '
-        Me.Timer1.Interval = 250
+        Me.Timer1.Interval = 35
         '
         'Timer2
         '
@@ -133,7 +141,7 @@ Partial Class Form1
         Me.Label6.AutoSize = True
         Me.Label6.Enabled = False
         Me.Label6.ForeColor = System.Drawing.SystemColors.ButtonShadow
-        Me.Label6.Location = New System.Drawing.Point(10, 367)
+        Me.Label6.Location = New System.Drawing.Point(10, 397)
         Me.Label6.Name = "Label6"
         Me.Label6.Size = New System.Drawing.Size(105, 13)
         Me.Label6.TabIndex = 9
@@ -144,7 +152,7 @@ Partial Class Form1
         Me.Label7.AutoSize = True
         Me.Label7.Enabled = False
         Me.Label7.ForeColor = System.Drawing.SystemColors.ButtonShadow
-        Me.Label7.Location = New System.Drawing.Point(121, 367)
+        Me.Label7.Location = New System.Drawing.Point(118, 397)
         Me.Label7.Name = "Label7"
         Me.Label7.Size = New System.Drawing.Size(0, 13)
         Me.Label7.TabIndex = 10
@@ -152,7 +160,7 @@ Partial Class Form1
         'Label8
         '
         Me.Label8.AutoSize = True
-        Me.Label8.Location = New System.Drawing.Point(12, 111)
+        Me.Label8.Location = New System.Drawing.Point(10, 65)
         Me.Label8.Name = "Label8"
         Me.Label8.Size = New System.Drawing.Size(23, 13)
         Me.Label8.TabIndex = 11
@@ -161,7 +169,7 @@ Partial Class Form1
         'Label9
         '
         Me.Label9.AutoSize = True
-        Me.Label9.Location = New System.Drawing.Point(56, 111)
+        Me.Label9.Location = New System.Drawing.Point(39, 65)
         Me.Label9.Name = "Label9"
         Me.Label9.Size = New System.Drawing.Size(46, 13)
         Me.Label9.TabIndex = 12
@@ -170,7 +178,7 @@ Partial Class Form1
         'CheckBox1
         '
         Me.CheckBox1.AutoSize = True
-        Me.CheckBox1.Location = New System.Drawing.Point(13, 69)
+        Me.CheckBox1.Location = New System.Drawing.Point(129, 65)
         Me.CheckBox1.Name = "CheckBox1"
         Me.CheckBox1.Size = New System.Drawing.Size(107, 17)
         Me.CheckBox1.TabIndex = 13
@@ -183,11 +191,53 @@ Partial Class Form1
         Me.NotifyIcon1.Text = "DTun4"
         Me.NotifyIcon1.Visible = True
         '
+        'ProgressBar1
+        '
+        Me.ProgressBar1.Location = New System.Drawing.Point(13, 123)
+        Me.ProgressBar1.Name = "ProgressBar1"
+        Me.ProgressBar1.Size = New System.Drawing.Size(264, 23)
+        Me.ProgressBar1.TabIndex = 14
+        '
+        'Timer3
+        '
+        Me.Timer3.Interval = 1000
+        '
+        'Button2
+        '
+        Me.Button2.Enabled = False
+        Me.Button2.Location = New System.Drawing.Point(202, 153)
+        Me.Button2.Name = "Button2"
+        Me.Button2.Size = New System.Drawing.Size(75, 23)
+        Me.Button2.TabIndex = 15
+        Me.Button2.Text = "Chat"
+        Me.Button2.UseVisualStyleBackColor = True
+        '
+        'client
+        '
+        Me.client.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ping, Me.ToolStripMenuItem1})
+        Me.client.Name = "ContextMenuStrip1"
+        Me.client.Size = New System.Drawing.Size(116, 48)
+        Me.client.Text = "Connected client"
+        '
+        'ping
+        '
+        Me.ping.Name = "ping"
+        Me.ping.Size = New System.Drawing.Size(115, 22)
+        Me.ping.Text = "Ping"
+        '
+        'ToolStripMenuItem1
+        '
+        Me.ToolStripMenuItem1.Name = "ToolStripMenuItem1"
+        Me.ToolStripMenuItem1.Size = New System.Drawing.Size(115, 22)
+        Me.ToolStripMenuItem1.Text = "Copy IP"
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(284, 389)
+        Me.ClientSize = New System.Drawing.Size(284, 419)
+        Me.Controls.Add(Me.Button2)
+        Me.Controls.Add(Me.ProgressBar1)
         Me.Controls.Add(Me.CheckBox1)
         Me.Controls.Add(Me.Label9)
         Me.Controls.Add(Me.Label8)
@@ -207,6 +257,7 @@ Partial Class Form1
         Me.MaximizeBox = False
         Me.Name = "Form1"
         Me.Text = "DTun4"
+        Me.client.ResumeLayout(False)
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -229,5 +280,11 @@ Partial Class Form1
     Friend WithEvents Label9 As System.Windows.Forms.Label
     Friend WithEvents CheckBox1 As System.Windows.Forms.CheckBox
     Friend WithEvents NotifyIcon1 As System.Windows.Forms.NotifyIcon
+    Friend WithEvents ProgressBar1 As System.Windows.Forms.ProgressBar
+    Friend WithEvents Timer3 As System.Windows.Forms.Timer
+    Friend WithEvents Button2 As System.Windows.Forms.Button
+    Friend WithEvents client As System.Windows.Forms.ContextMenuStrip
+    Friend WithEvents ping As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents ToolStripMenuItem1 As System.Windows.Forms.ToolStripMenuItem
 
 End Class

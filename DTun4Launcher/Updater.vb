@@ -7,21 +7,11 @@ Public Class Updater
     Private Sub Updater_Shown(sender As Object, e As EventArgs) Handles MyBase.Shown
         Dim cl As WebClient = New WebClient
 
-        If Not File.Exists(My.Application.Info.DirectoryPath & "\DTun4ClientLibrary.dll") Then
-            AddHandler cl.DownloadFileCompleted, AddressOf done
-            cl.DownloadFileAsync(New Uri("http://dtun4.disahome.tk/download.php"), "DTun4ClientLibrary.dll")
-            Timer1.Interval = 50
-            ProgressBar1.Value = 0
-            Label1.Text = "Downloading new version..."
-            Exit Sub
-        End If
-
-
         Dim fvi As FileVersionInfo = FileVersionInfo.GetVersionInfo(My.Application.Info.DirectoryPath & "\DTun4ClientLibrary.dll")
         Dim fv = fvi.FileMajorPart & fvi.FileMinorPart
         Dim ok As String = ""
         Try
-            ok = cl.DownloadString("http://dtun4.disahome.tk/check.php?version=" & fv)
+            ok = cl.DownloadString("http://dtun4.disahome.tk/data/check.php?version=" & fv)
         Catch
             Shell(".\DTun4.exe -updated")
             Environment.Exit(0)
@@ -31,11 +21,14 @@ Public Class Updater
             Shell(".\DTun4.exe -updated")
             Environment.Exit(0)
         ElseIf ok.Contains("BAD") Then
-            AddHandler cl.DownloadFileCompleted, AddressOf done
-            cl.DownloadFileAsync(New Uri("http://dtun4.disahome.tk/download.php"), "DTun4ClientLibrary.dll")
+            'AddHandler cl.DownloadFileCompleted, AddressOf done
+            cl.DownloadFile(New Uri("http://dtun4.disahome.tk/dl/DTun4ClientLibrary.dll"), "DTun4ClientLibrary.dll")
+            cl.DownloadFile(New Uri("http://dtun4.disahome.tk/dl/DTun4.exe"), "DTun4.exe")
             Timer1.Interval = 50
             ProgressBar1.Value = 0
             Label1.Text = "Downloading new version..."
+            Shell(".\DTun4.exe -updated")
+            Environment.Exit(0)
         ElseIf ok.Contains("MESS ") Then
             MessageBox.Show(ok.Replace("MESS ", ""))
             Environment.Exit(1)
