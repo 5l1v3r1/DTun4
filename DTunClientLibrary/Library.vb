@@ -131,6 +131,7 @@ Public Class Library
         Next
         If chdev = -1 Then
             log1.WriteLine("DTun adapter was not found. Try reinstalling it.")
+            MsgBox("DTun adapter was not found. Try reinstalling it.")
             state = 7
             Exit Sub
         End If
