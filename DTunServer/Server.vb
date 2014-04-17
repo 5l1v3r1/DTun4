@@ -137,6 +137,7 @@ Module Server
 
                     If (Encoding.Default.GetString(packet) = "INFOPLS") Then
                         If net = "none" Then
+                            Console.WriteLine("@")
                             listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), source)
                         Else
                             Dim mess As String = "KFINE"
@@ -213,10 +214,10 @@ Module Server
                 End If
                 If networks.ElementAt(i).Value.ElementAt(j).Time = 0 Then
                     Try
+                        Console.Write("-" & networks.ElementAt(i).Value.ElementAt(j).Name)
                         clients.Remove(networks.ElementAt(i).Value.ElementAt(j).EndP)
                         networks(networks.ElementAt(i).Key).Remove(networks.ElementAt(i).Value.ElementAt(j))
-                        Console.Write("-")
-                        listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), networks.ElementAt(i).Value.ElementAt(j).EndP)
+                        'listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), networks.ElementAt(i).Value.ElementAt(j).EndP)
                     Catch
                     End Try
 

@@ -94,7 +94,7 @@ Public Class Library
 
 
         updateusers = True
-        Shell("netsh interface ip set address name=DTun4 source=static address=" & response(1) & " mask=255.0.0.0", AppWinStyle.Hide, True, -1)
+        Shell("netsh interface ip set address name=DTun4 source=static addr=" & response(1) & " mask=255.0.0.0 gateway=none", AppWinStyle.Hide, True, -1)
         'Dim localIPs As IPAddress() = Dns.GetHostAddresses(Dns.GetHostName())
         'For k As Integer = 0 To localIPs.GetUpperBound(0)
         '    If localIPs(k).ToString.StartsWith(response(0)) Then

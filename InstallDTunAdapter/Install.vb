@@ -53,7 +53,7 @@
         Console.WriteLine()
 
 
-        Shell("netsh interface ip set address name=DTun4 source=static address=31.0.0.10 mask=255.0.0.0", AppWinStyle.Hide, True, -1)
+        Shell("netsh interface ip set address name=DTun4 source=static addr=31.0.0.10 mask=255.0.0.0", AppWinStyle.Hide, True, -1)
 
         Console.WriteLine()
         Console.WriteLine("##############################")
