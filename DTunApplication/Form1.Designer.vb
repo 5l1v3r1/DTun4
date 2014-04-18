@@ -37,7 +37,6 @@ Partial Class Form1
         Me.Timer2 = New System.Windows.Forms.Timer(Me.components)
         Me.Label6 = New System.Windows.Forms.Label()
         Me.Label7 = New System.Windows.Forms.Label()
-        Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.Label8 = New System.Windows.Forms.Label()
         Me.Label9 = New System.Windows.Forms.Label()
         Me.CheckBox1 = New System.Windows.Forms.CheckBox()
@@ -48,6 +47,7 @@ Partial Class Form1
         Me.client = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.ping = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
+        Me.Label10 = New System.Windows.Forms.Label()
         Me.client.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -83,7 +83,6 @@ Partial Class Form1
         Me.ListBox1.Name = "ListBox1"
         Me.ListBox1.Size = New System.Drawing.Size(264, 212)
         Me.ListBox1.TabIndex = 3
-        Me.ToolTip1.SetToolTip(Me.ListBox1, "Click to copy IP to clipboard")
         '
         'Button1
         '
@@ -231,11 +230,21 @@ Partial Class Form1
         Me.ToolStripMenuItem1.Size = New System.Drawing.Size(115, 22)
         Me.ToolStripMenuItem1.Text = "Copy IP"
         '
+        'Label10
+        '
+        Me.Label10.AutoSize = True
+        Me.Label10.Enabled = False
+        Me.Label10.Location = New System.Drawing.Point(199, 397)
+        Me.Label10.Name = "Label10"
+        Me.Label10.Size = New System.Drawing.Size(0, 13)
+        Me.Label10.TabIndex = 16
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(284, 419)
+        Me.Controls.Add(Me.Label10)
         Me.Controls.Add(Me.Button2)
         Me.Controls.Add(Me.ProgressBar1)
         Me.Controls.Add(Me.CheckBox1)
@@ -275,7 +284,6 @@ Partial Class Form1
     Friend WithEvents Timer2 As System.Windows.Forms.Timer
     Friend WithEvents Label6 As System.Windows.Forms.Label
     Friend WithEvents Label7 As System.Windows.Forms.Label
-    Friend WithEvents ToolTip1 As System.Windows.Forms.ToolTip
     Friend WithEvents Label8 As System.Windows.Forms.Label
     Friend WithEvents Label9 As System.Windows.Forms.Label
     Friend WithEvents CheckBox1 As System.Windows.Forms.CheckBox
@@ -286,5 +294,6 @@ Partial Class Form1
     Friend WithEvents client As System.Windows.Forms.ContextMenuStrip
     Friend WithEvents ping As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ToolStripMenuItem1 As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents Label10 As System.Windows.Forms.Label
 
 End Class

@@ -46,10 +46,18 @@ Public Class Form1
         lib1 = New Library
         Dim thr As New Threading.Thread(AddressOf lib1.Main)
         thr.IsBackground = True
-        Dim c(2) As String
+        Dim c(4) As Object
         c(0) = TextBox2.Text
         c(1) = TextBox1.Text
         c(2) = CheckBox1.Checked
+        c(3) = False
+        c(4) = Me.NotifyIcon1
+
+        If (Command$().ToLower.Contains("-debug")) Then
+            c(3) = True
+            Label10.Text = "DEBUG MODE"
+        End If
+
         thr.Start(c)
         'lib1.Main(TextBox2.Text, TextBox1.Text)
 
@@ -126,13 +134,6 @@ Public Class Form1
         End If
     End Sub
 
-    Private Sub ListBox1_Click(sender As Object, e As EventArgs) Handles ListBox1.Click
-        If Not ListBox1.SelectedItem Is Nothing Then
-            'ToolTip1.SetToolTip(Me.ListBox1, "Click to copy IP to clipboard")
-            Clipboard.SetText(ListBox1.SelectedItem.ToString.Split(":")(1))
-            ListBox1.ClearSelected()
-        End If
-    End Sub
 
     Private Sub NotifyIcon1_Click(sender As Object, e As EventArgs) Handles NotifyIcon1.Click
         Show()
@@ -153,7 +154,7 @@ Public Class Form1
             TextBox2.Enabled = False
             Button1.Enabled = False
             CheckBox1.Enabled = False
-            Label5.Text = "Network error. Reconnecting in 45 seconds..."
+            Label5.Text = "Network error. Reconnecting in 10 seconds..."
             ProgressBar1.Value = 100
             Modify.SetState(ProgressBar1, 2)
             Timer3.Start()
@@ -161,8 +162,8 @@ Public Class Form1
     End Sub
 
     Private Sub Timer3_Tick(sender As Object, e As EventArgs) Handles Timer3.Tick
-        If ProgressBar1.Value > 4 Then
-            ProgressBar1.Value -= 2
+        If ProgressBar1.Value > 10 Then
+            ProgressBar1.Value -= 10
         Else
             Modify.SetState(ProgressBar1, 1)
             ProgressBar1.Value = 0
@@ -200,7 +201,6 @@ Public Class Form1
             Shell(e.ClickedItem.Text & " -t", AppWinStyle.NormalFocus, False)
         Else
             If Not ListBox1.SelectedItem Is Nothing Then
-                'ToolTip1.SetToolTip(Me.ListBox1, "Click to copy IP to clipboard")
                 Clipboard.SetText(ListBox1.SelectedItem.ToString.Split(":")(1))
                 ListBox1.ClearSelected()
             End If

@@ -26,11 +26,15 @@ Public Class Library
     Dim aespass As String
     Public state As Integer = 0
 
+    Public Shared icon As System.Windows.Forms.NotifyIcon
+
+    Dim ih As IconHelper
+
     Public chatlines As New List(Of String)
     Dim chatsender As New UdpClient()
 
     Dim thr As Threading.Thread
-    Sub Main(c As String())
+    Sub Main(c As Object())
         If Not log1 Is Nothing Then
             log1.Close()
         End If
@@ -39,10 +43,13 @@ Public Class Library
         Dim cname As String = c(0)
         Dim nname As String = c(1)
         Dim staticip As Boolean = c(2)
+
+        icon = c(4)
+        ih = New IconHelper
+
 #If Not Debug Then
         Dim w As New MyWebClient
         w.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11")
-        'remote = w.DownloadString("http://dtun4.disahome.tk/data/ip.txt")
         remote = Dns.GetHostEntry("apps.disahome.tk").AddressList(0).ToString
         Try
             serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.tk/data/rsapubkey.txt"))
@@ -65,9 +72,14 @@ Public Class Library
         state = 1
         Threading.Thread.Sleep(450)
 
-        aespass = RandKey(20)
+        aespass = RandKey(32)
 
-        log1.WriteLine("Generated AES key")
+        If c(3) = True Then
+            log1.WriteLine("Generated AES key - DEBUG - " & aespass)
+        Else
+            log1.WriteLine("Generated AES key")
+        End If
+
         state = 2
         Threading.Thread.Sleep(450)
 
@@ -130,8 +142,8 @@ Public Class Library
             i += 1
         Next
         If chdev = -1 Then
-            log1.WriteLine("DTun adapter was not found. Try reinstalling it.")
-            MsgBox("DTun adapter was not found. Try reinstalling it.")
+            log1.WriteLine("DTun adapter was not found. Try reinstalling WinPcap.")
+            MsgBox("DTun adapter was not found. Try reinstalling WinPcap.")
             state = 7
             Exit Sub
         End If
@@ -173,6 +185,7 @@ Public Class Library
 
 
     Sub HandlePacket(sender As Object, e As CaptureEventArgs)
+        ih.U()
         Dim packet As Byte() = e.Packet.Data
         log1.Write("Captured packet: ")
         Dim pack As Packet = PacketDotNet.Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data)
@@ -185,13 +198,13 @@ Public Class Library
             ParseARP(pack, packet)
         End If
 
-
         If (ip1 Is Nothing) And (arp Is Nothing) Then
             log1.WriteLine("nonIP nor arp packet")
             Exit Sub
         End If
 
         log1.Flush()
+
     End Sub
 
     Sub SendMessage(mes As String)
@@ -204,6 +217,7 @@ Public Class Library
             Try
                 source = groupEP
                 Dim packet As Byte() = listener.Receive(source)
+
                 Dim message As String = Encoding.Default.GetString(packet)
                 If (message.StartsWith("KFINE")) Then
                     users = Encoding.Default.GetString(packet).Substring(5).Split("^")
@@ -226,6 +240,9 @@ Public Class Library
                 If packet Is {0} Then
                     Continue While
                 End If
+
+                ih.R()
+
                 Dim pack As Packet = PacketDotNet.Packet.ParsePacket(LinkLayers.Ethernet, packet)
                 Dim ip1 As IpPacket = IpPacket.GetEncapsulated(pack)
                 Dim arp As ARPPacket = ARPPacket.GetEncapsulated(pack)
@@ -257,7 +274,6 @@ Public Class Library
                     'log1.WriteLine("Received ARP packed intended to another device. Skipped.")
                     'End If
                 End If
-
 
                 log1.Flush()
             Catch e As Exception
@@ -378,4 +394,53 @@ Class MyWebClient
         w.Timeout = 6000
         Return w
     End Function
+End Class
+
+
+
+Class IconHelper
+    Dim rec As Integer = 0
+    Dim sen As Integer = 0
+    Dim i1 As System.Drawing.Icon = My.Resources._1
+    Dim i2 As System.Drawing.Icon = My.Resources._2
+    Dim i3 As System.Drawing.Icon = My.Resources._3
+    Dim i4 As System.Drawing.Icon = My.Resources._4
+
+
+    Dim thr As New System.Timers.Timer(100)
+    Sub New()
+        AddHandler thr.Elapsed, AddressOf Update
+        thr.Start()
+    End Sub
+    Public Sub R()
+        If rec < 4 Then
+            rec += 1
+        End If
+    End Sub
+    Public Sub U()
+        If sen < 4 Then
+            sen += 1
+        End If
+    End Sub
+
+    Sub Update()
+        Try
+            If rec > 0 Then
+                If sen > 0 Then
+                    Library.icon.Icon = i4
+                    rec -= 1
+                    sen -= 1
+                Else
+                    Library.icon.Icon = i3
+                    rec -= 1
+                End If
+            ElseIf sen > 0 Then
+                Library.icon.Icon = i2
+                sen -= 1
+            Else
+                Library.icon.Icon = i1
+            End If
+        Catch
+        End Try
+    End Sub
 End Class

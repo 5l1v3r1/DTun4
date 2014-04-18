@@ -96,22 +96,15 @@ Module Server
                     source = groupEP
                     Dim packet As Byte() = listener.Receive(source)
                     If Not clients.Contains(source) Then
-                        If Not clients.Contains(source) Then
-                            clients.Add(source)
-                        Else
-                            Dim netname As String = FindNetwork(source)
-                            For i As Integer = 0 To networks(netname).Count - 1
-                                If networks(netname).ElementAt(i).EndP.Equals(source) Then
-                                    networks(netname).RemoveAt(i)
-                                    Exit For
-                                End If
-                            Next
-                        End If
+
                         Dim response As String() = Encoding.Default.GetString(packet).Split({"*"c}, 5)
                         If Not response.GetUpperBound(0) = 4 Then
                             listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), source)
                             Continue While
                         End If
+
+                        clients.Add(source)
+
                         If Not networks.ContainsKey(response(2)) Then
                             networks(response(2)) = New List(Of Client)
                         End If
@@ -215,9 +208,9 @@ Module Server
                 If networks.ElementAt(i).Value.ElementAt(j).Time = 0 Then
                     Try
                         Console.Write("-" & networks.ElementAt(i).Value.ElementAt(j).Name)
+                        listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), networks.ElementAt(i).Value.ElementAt(j).EndP)
                         clients.Remove(networks.ElementAt(i).Value.ElementAt(j).EndP)
                         networks(networks.ElementAt(i).Key).Remove(networks.ElementAt(i).Value.ElementAt(j))
-                        'listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), networks.ElementAt(i).Value.ElementAt(j).EndP)
                     Catch
                     End Try
 
