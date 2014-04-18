@@ -40,6 +40,11 @@ Module Install
                 Dim key As String = Registry.LocalMachine.OpenSubKey(regpath & "\" & keys(i), False).GetValue("DriverDesc")
                 Dim value As String = Registry.LocalMachine.OpenSubKey(regpath & "\" & keys(i), False).GetValue("NetCfgInstanceId")
 
+                If key = "TAP-Windows Adapter V9" Then
+                    Registry.LocalMachine.OpenSubKey(regpath & "\" & keys(i), True).SetValue("MediaStatus", "1")
+                    Registry.LocalMachine.OpenSubKey(regpath & "\" & keys(i) & "\Ndi\params\MediaStatus", True).SetValue("Default", "1")
+                End If
+
                 If key <> "" And value <> "" Then
                     pairs(key) = value
                 End If

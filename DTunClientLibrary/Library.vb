@@ -5,6 +5,8 @@ Imports System.Net
 Imports System.Text
 Imports PacketDotNet
 Imports System.Security.Cryptography
+
+
 Public Class Library
     Dim device As ICaptureDevice
     Public listener As UdpClient = New UdpClient()
@@ -40,6 +42,9 @@ Public Class Library
         End If
         log1 = New StreamWriter("log.txt", True)
         log1.WriteLine("Preparing...")
+
+
+
         Dim cname As String = c(0)
         Dim nname As String = c(1)
         Dim staticip As Boolean = c(2)
@@ -235,7 +240,7 @@ Public Class Library
                 End If
                 packet = AES_Decrypt(packet)
 
-                
+
 
                 If packet Is {0} Then
                     Continue While
@@ -247,7 +252,7 @@ Public Class Library
                 Dim ip1 As IpPacket = IpPacket.GetEncapsulated(pack)
                 Dim arp As ARPPacket = ARPPacket.GetEncapsulated(pack)
 
-                
+
 
                 If (Not ip1 Is Nothing) Then
                     'If ip1.DestinationAddress.Equals(IPAddress.Parse(IP)) Then
@@ -315,7 +320,7 @@ Public Class Library
         End If
     End Sub
 
-    
+
 
     Public Function AES_Decrypt(ByVal in1 As Byte(), Optional ByVal pass As String = "") As Byte()
         Dim input As String = Convert.ToBase64String(in1)
@@ -334,7 +339,7 @@ Public Class Library
             AES.Key = hash
             AES.Mode = CipherMode.ECB
             Dim DESDecrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateDecryptor
-            Dim Buffer As Byte() = Convert.FromBase64String(Input)
+            Dim Buffer As Byte() = Convert.FromBase64String(input)
             decrypted = System.Text.ASCIIEncoding.ASCII.GetString(DESDecrypter.TransformFinalBlock(Buffer, 0, Buffer.Length))
             Return Convert.FromBase64String(decrypted)
         Catch ex As Exception
@@ -358,7 +363,7 @@ Public Class Library
             AES.Key = hash
             AES.Mode = CipherMode.ECB
             Dim DESEncrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateEncryptor
-            Dim Buffer As Byte() = System.Text.ASCIIEncoding.ASCII.GetBytes(Input)
+            Dim Buffer As Byte() = System.Text.ASCIIEncoding.ASCII.GetBytes(input)
             encrypted = Convert.ToBase64String(DESEncrypter.TransformFinalBlock(Buffer, 0, Buffer.Length))
             Return Convert.FromBase64String(encrypted)
         Catch ex As Exception
@@ -383,6 +388,9 @@ Public Class Library
         Return sb.ToString
 
     End Function
+
+
+
 End Class
 
 Class MyWebClient
