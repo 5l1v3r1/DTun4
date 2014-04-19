@@ -61,14 +61,14 @@ Public Class Library
         Catch
             Try
                 serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.tk/data/rsapubkey.txt"))
-            Catch
-                Try
-                    serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.tk/data/rsapubkey.txt"))
-                Catch
+            Catch  
+                If File.Exists("rsapubkey.txt") And c(3) Then
+                    serverrsa.FromXmlString(File.ReadAllText("rsapubkey.txt"))
+                Else
                     state = 7
                     MsgBox("Can't download server public RSA key.")
                     Exit Sub
-                End Try
+                End If
             End Try
         End Try
         w.Dispose()
@@ -159,7 +159,7 @@ Public Class Library
 
         device = devices(chdev)
         AddHandler device.OnPacketArrival, New SharpPcap.PacketArrivalEventHandler(AddressOf HandlePacket)
-        device.Open(DeviceMode.Normal, 30)
+        device.Open(DeviceMode.Normal, 1)
         device.StartCapture()
         thr.Start()
         log1.WriteLine("Connected with device.")

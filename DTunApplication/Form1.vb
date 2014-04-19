@@ -100,6 +100,7 @@ Public Class Form1
                 Label5.Text = "Connected"
             ElseIf state1 = 7 Then
                 Label5.Text = "Error"
+                ProgressBar1.Value = 50
                 Modify.SetState(ProgressBar1, 2)
             End If
         End If

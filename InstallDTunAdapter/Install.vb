@@ -17,8 +17,9 @@ Module Install
         Console.WriteLine()
 
 
-        Dim dir As String = System.AppDomain.CurrentDomain.BaseDirectory()
-        Shell("newtap.bat " & dir, AppWinStyle.Hide, True, -1)
+        'Dim dir As String = System.AppDomain.CurrentDomain.BaseDirectory()
+        '& dir
+        Shell("newtap.bat", AppWinStyle.Hide, True, -1)
 
 
         Console.WriteLine()
@@ -34,7 +35,8 @@ Module Install
         Dim regpath As String = "SYSTEM\ControlSet001\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}"
         Dim keys As String() = Registry.LocalMachine.OpenSubKey(regpath, False).GetSubKeyNames
 
-        Dim pairs As New Dictionary(Of String, String)
+        'Dim pairs As New Dictionary(Of String, String)
+        Dim id As String = ""
         For i As Integer = 0 To keys.Count - 1
             Try
                 Dim key As String = Registry.LocalMachine.OpenSubKey(regpath & "\" & keys(i), False).GetValue("DriverDesc")
@@ -43,22 +45,19 @@ Module Install
                 If key = "TAP-Windows Adapter V9" Then
                     Registry.LocalMachine.OpenSubKey(regpath & "\" & keys(i), True).SetValue("MediaStatus", "1")
                     Registry.LocalMachine.OpenSubKey(regpath & "\" & keys(i) & "\Ndi\params\MediaStatus", True).SetValue("Default", "1")
+                    id = value
                 End If
-
-                If key <> "" And value <> "" Then
-                    pairs(key) = value
+                If key = "DTun4" Then
+                    id = value
                 End If
+                
             Catch
             End Try
         Next
-
-#If PLATFORM = "x86" Then
-        Dim id As String = pairs("DTun4")
-#End If
-#If PLATFORM = "x64" Then
-         Dim id As String = pairs("TAP-Windows Adapter V9")
-#End If
-
+        If id = "" Then
+            Console.WriteLine("Error. DTun4 adapter not found.")
+            Console.ReadLine()
+        End If
         regpath = "SYSTEM\ControlSet001\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}\" & id & "\Connection"
 
         Dim name As String = Registry.LocalMachine.OpenSubKey(regpath, False).GetValue("Name")
