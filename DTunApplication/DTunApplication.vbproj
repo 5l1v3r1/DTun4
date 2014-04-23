@@ -47,7 +47,7 @@
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Untitled.ico</ApplicationIcon>
+    <ApplicationIcon>dtun-trans.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>My Project\app.manifest</ApplicationManifest>
@@ -141,6 +141,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\1.ico" />
+    <None Include="Resources\3.ico" />
+    <None Include="Resources\4.ico" />
+    <None Include="Resources\_0.ico" />
+    <None Include="Resources\_2.ico" />
+    <None Include="Resources\_1.ico" />
+    <None Include="Resources\_3.ico" />
+    <Content Include="dtun-trans.ico" />
     <Content Include="Untitled.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />

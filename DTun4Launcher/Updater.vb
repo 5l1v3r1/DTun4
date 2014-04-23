@@ -10,7 +10,7 @@ Public Class Updater
         Dim fv = fvi.FileMajorPart & fvi.FileMinorPart
         Dim ok As String = ""
         Try
-            ok = cl.DownloadString("http://dtun4.disahome.tk/data/check.php?version=" & fv)
+            ok = cl.DownloadString("http://dtun4.disahome.me/data/check.php?version=" & fv)
         Catch
             Shell(".\DTun4.exe -updated")
             Environment.Exit(0)
@@ -20,8 +20,8 @@ Public Class Updater
             Environment.Exit(0)
         ElseIf ok.Contains("BAD") Then
             'AddHandler cl.DownloadFileCompleted, AddressOf done
-            cl.DownloadFile(New Uri("http://dtun4.disahome.tk/dl/DTun4ClientLibrary.dll"), "DTun4ClientLibrary.dll")
-            cl.DownloadFile(New Uri("http://dtun4.disahome.tk/dl/DTun4.exe"), "DTun4.exe")
+            cl.DownloadFile(New Uri("http://dtun4.disahome.me/dl/DTun4ClientLibrary.dll"), "DTun4ClientLibrary.dll")
+            cl.DownloadFile(New Uri("http://dtun4.disahome.me/dl/DTun4.exe"), "DTun4.exe")
             Shell(".\DTun4.exe -updated")
             Environment.Exit(0)
         ElseIf ok.Contains("MESS ") Then

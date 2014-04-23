@@ -27,7 +27,6 @@ Partial Class Form1
         Me.TextBox1 = New System.Windows.Forms.TextBox()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
-        Me.ListBox1 = New System.Windows.Forms.ListBox()
         Me.Button1 = New System.Windows.Forms.Button()
         Me.Label3 = New System.Windows.Forms.Label()
         Me.TextBox2 = New System.Windows.Forms.TextBox()
@@ -48,6 +47,7 @@ Partial Class Form1
         Me.ping = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
         Me.Label10 = New System.Windows.Forms.Label()
+        Me.ListBox1 = New DTun4.Toolset.Controls.CustomDrawListBox()
         Me.client.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -75,14 +75,6 @@ Partial Class Form1
         Me.Label2.Size = New System.Drawing.Size(95, 13)
         Me.Label2.TabIndex = 2
         Me.Label2.Text = "Connected clients:"
-        '
-        'ListBox1
-        '
-        Me.ListBox1.FormattingEnabled = True
-        Me.ListBox1.Location = New System.Drawing.Point(13, 182)
-        Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.Size = New System.Drawing.Size(264, 212)
-        Me.ListBox1.TabIndex = 3
         '
         'Button1
         '
@@ -239,11 +231,22 @@ Partial Class Form1
         Me.Label10.Size = New System.Drawing.Size(0, 13)
         Me.Label10.TabIndex = 16
         '
+        'ListBox1
+        '
+        Me.ListBox1.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable
+        Me.ListBox1.FormattingEnabled = True
+        Me.ListBox1.ItemHeight = 16
+        Me.ListBox1.Location = New System.Drawing.Point(12, 182)
+        Me.ListBox1.Name = "ListBox1"
+        Me.ListBox1.Size = New System.Drawing.Size(265, 212)
+        Me.ListBox1.TabIndex = 17
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(284, 419)
+        Me.ClientSize = New System.Drawing.Size(285, 419)
+        Me.Controls.Add(Me.ListBox1)
         Me.Controls.Add(Me.Label10)
         Me.Controls.Add(Me.Button2)
         Me.Controls.Add(Me.ProgressBar1)
@@ -257,7 +260,6 @@ Partial Class Form1
         Me.Controls.Add(Me.TextBox2)
         Me.Controls.Add(Me.Label3)
         Me.Controls.Add(Me.Button1)
-        Me.Controls.Add(Me.ListBox1)
         Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.TextBox1)
@@ -274,7 +276,6 @@ Partial Class Form1
     Friend WithEvents TextBox1 As System.Windows.Forms.TextBox
     Friend WithEvents Label1 As System.Windows.Forms.Label
     Friend WithEvents Label2 As System.Windows.Forms.Label
-    Friend WithEvents ListBox1 As System.Windows.Forms.ListBox
     Friend WithEvents Button1 As System.Windows.Forms.Button
     Friend WithEvents Label3 As System.Windows.Forms.Label
     Friend WithEvents TextBox2 As System.Windows.Forms.TextBox
@@ -295,5 +296,6 @@ Partial Class Form1
     Friend WithEvents ping As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ToolStripMenuItem1 As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents Label10 As System.Windows.Forms.Label
+    Friend WithEvents ListBox1 As DTun4.Toolset.Controls.CustomDrawListBox
 
 End Class

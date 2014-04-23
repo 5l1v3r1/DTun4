@@ -6,7 +6,7 @@ Public Class Chat
     Dim chatlines1 As New List(Of String)
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
         Try
-            If Not Form1.lib1.chatlines.Equals(chatlines1) Then
+            If Not Form1.lib1.chatlines.Count = chatlines1.Count Then
                 For i As Integer = chatlines1.Count To Form1.lib1.chatlines.Count - 1
                     Dim mes As String() = Split(Form1.lib1.chatlines(i), {":"c}, 2)
                     For j As Integer = 0 To Form1.lib1.users.Count - 1

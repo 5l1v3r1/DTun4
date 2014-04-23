@@ -1,12 +1,17 @@
 ﻿Imports System.Text
 Imports System.Net
 Imports System.Runtime.InteropServices
+Imports System.Windows.Forms
+Imports System.Drawing
+Imports System.Net.Sockets
 
 Public Class Form1
     Public Shared lib1 As Library
     Dim state1 As Integer = -1
+    Public Shared status As New Dictionary(Of String, ClientInfo)
+    Dim thr As New Threading.Thread(AddressOf connectionTest)
     Private Sub Form1_Shown(sender As Object, e As EventArgs) Handles MyBase.Shown
-        
+
         Dim fvi As FileVersionInfo = FileVersionInfo.GetVersionInfo(My.Application.Info.DirectoryPath & "\DTun4ClientLibrary.dll")
         Label7.Text = fvi.FileMajorPart & "." & fvi.FileMinorPart
         TextBox1.Text = My.Settings.tb1
@@ -24,6 +29,7 @@ Public Class Form1
         End If
 #End If
         WindowState = FormWindowState.Normal
+        Form1.CheckForIllegalCrossThreadCalls = False
     End Sub
 
     Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
@@ -98,6 +104,8 @@ Public Class Form1
                 Label5.Text = "Device found. Connecting..."
             ElseIf state1 = 6 Then
                 Label5.Text = "Connected"
+                thr.IsBackground = True
+                thr.Start()
             ElseIf state1 = 7 Then
                 Label5.Text = "Error"
                 ProgressBar1.Value = 50
@@ -195,6 +203,7 @@ Public Class Form1
                 client.Show(MousePosition)
             End If
         End If
+        ListBox1.ClearSelected()
     End Sub
 
     Private Sub client_ItemClicked(sender As Object, e As ToolStripItemClickedEventArgs) Handles client.ItemClicked
@@ -208,7 +217,114 @@ Public Class Form1
         End If
 
     End Sub
+
+    Private Sub connectionTest()
+        Dim CMlistener As New UdpClient(4957)
+        CMlistener.Client.ReceiveTimeout = 1100
+        Dim source As IPEndPoint
+        While True
+            Try
+                Dim p As New System.Net.NetworkInformation.Ping
+
+
+                Dim newstatus As New Dictionary(Of String, ClientInfo)
+                For i As Integer = 0 To ListBox1.Items.Count - 1
+                    If Not newstatus.ContainsKey(ListBox1.Items(i).ToString) Then
+                        Dim pingreply As Net.NetworkInformation.PingReply = p.Send(ListBox1.Items(i).ToString.Split(":")(1), 1100)
+                        If pingreply.Status = NetworkInformation.IPStatus.Success Then
+                            Dim cl As New ClientInfo(2, pingreply.RoundtripTime)
+                            newstatus(ListBox1.Items(i)) = cl
+                        Else
+                            lib1.SendControlMessageReq(ListBox1.Items(i).ToString.Split(":")(1))
+                            Try
+                                If Encoding.Default.GetString(CMlistener.Receive(source)) = "DTun4CM-REP" Then
+                                    Dim cl1 As New ClientInfo(1, 0)
+                                    newstatus(ListBox1.Items(i)) = cl1
+                                    Continue For
+                                End If
+                            Catch e As Exception
+
+                            End Try
+                            Dim cl2 As New ClientInfo(0, 0)
+                            newstatus(ListBox1.Items(i)) = cl2
+                        End If
+                    End If
+                Next
+                status = New Dictionary(Of String, ClientInfo)(newstatus)
+                ListBox1.Refresh()
+            Catch
+            End Try
+            Threading.Thread.Sleep(4000)
+        End While
+    End Sub
+    Structure ClientInfo
+        Dim status As Integer
+        Dim pingtime As Integer
+        Sub New(_1 As Integer, _2 As Integer)
+            status = _1
+            pingtime = _2
+        End Sub
+    End Structure
 End Class
+
+
+
+Namespace Toolset.Controls
+    Public Class CustomDrawListBox
+        Inherits ListBox
+        Dim _1 As Icon = My.Resources._1
+        Dim _0 As Icon = My.Resources._0
+        Dim _2 As Icon = My.Resources._2
+        Dim _3 As Icon = My.Resources._3
+        Public Sub New()
+            Me.DrawMode = Windows.Forms.DrawMode.OwnerDrawFixed
+
+            Me.ItemHeight = 16
+        End Sub
+
+        Protected Overrides Sub OnDrawItem(e As DrawItemEventArgs)
+            e.DrawBackground()
+            If e.Index >= Me.Items.Count OrElse e.Index <= -1 Then
+                Return
+            End If
+
+            Dim item As Object = Me.Items(e.Index)
+            If item Is Nothing Then
+                Return
+            End If
+
+
+
+            Dim text As String = item.ToString()
+            Dim stringSize As SizeF = e.Graphics.MeasureString(text, Me.Font)
+            If DTun4.Form1.status.ContainsKey(text) Then
+                If DTun4.Form1.status(text).status = 0 Then
+                    e.Graphics.DrawIcon(_0, 0, e.Bounds.Y)
+                    e.Graphics.DrawString(text, Me.Font, New SolidBrush(Color.Red), New PointF(20, e.Bounds.Y + (e.Bounds.Height - stringSize.Height) / 2))
+                    e.Graphics.DrawString("999", Me.Font, Brushes.Red, New PointF(e.Bounds.Right - 25, e.Bounds.Y + (e.Bounds.Height - stringSize.Height) / 2))
+                ElseIf DTun4.Form1.status(text).status = 1 Then
+                    e.Graphics.DrawIcon(_1, 0, e.Bounds.Y)
+                    e.Graphics.DrawString(text, Me.Font, New SolidBrush(Color.YellowGreen), New PointF(20, e.Bounds.Y + (e.Bounds.Height - stringSize.Height) / 2))
+                    e.Graphics.DrawString("N/A", Me.Font, Brushes.YellowGreen, New PointF(e.Bounds.Right - 25, e.Bounds.Y + (e.Bounds.Height - stringSize.Height) / 2))
+                ElseIf DTun4.Form1.status(text).status = 2 Then
+                    e.Graphics.DrawIcon(_2, 0, e.Bounds.Y)
+                    e.Graphics.DrawString(text, Me.Font, New SolidBrush(Color.Green), New PointF(20, e.Bounds.Y + (e.Bounds.Height - stringSize.Height) / 2))
+                    If DTun4.Form1.status(text).pingtime < 100 Then
+                        e.Graphics.DrawString(DTun4.Form1.status(text).pingtime, Me.Font, Brushes.Green, New PointF(e.Bounds.Right - 25, e.Bounds.Y + (e.Bounds.Height - stringSize.Height) / 2))
+                    ElseIf DTun4.Form1.status(text).pingtime < 300 Then
+                        e.Graphics.DrawString(DTun4.Form1.status(text).pingtime, Me.Font, Brushes.YellowGreen, New PointF(e.Bounds.Right - 25, e.Bounds.Y + (e.Bounds.Height - stringSize.Height) / 2))
+                    Else
+                        e.Graphics.DrawString(DTun4.Form1.status(text).pingtime, Me.Font, Brushes.Red, New PointF(e.Bounds.Right - 25, e.Bounds.Y + (e.Bounds.Height - stringSize.Height) / 2))
+                    End If
+
+                End If
+            Else
+                e.Graphics.DrawIcon(_3, 0, e.Bounds.Y)
+                e.Graphics.DrawString(text, Me.Font, New SolidBrush(Color.Blue), New PointF(20, e.Bounds.Y + (e.Bounds.Height - stringSize.Height) / 2))
+            End If
+        End Sub
+    End Class
+End Namespace
 
 
 

@@ -13,7 +13,7 @@ Public Class Library
     Public groupEP As IPEndPoint
     Dim source As New IPEndPoint(IPAddress.Any, 4955)
     Public IP As String
-    Public log1 As StreamWriter '= New StreamWriter("log.txt", True)
+    Dim log1 As StreamWriter '= New StreamWriter("log.txt", True)
 #If DEBUG Then
     Dim remote As String = "192.168.1.2"
 #Else
@@ -36,7 +36,7 @@ Public Class Library
     Dim chatsender As New UdpClient()
 
     Dim thr As Threading.Thread
-    Sub Main(c As Object())
+    Public Sub Main(c As Object())
         If Not log1 Is Nothing Then
             log1.Close()
         End If
@@ -55,13 +55,13 @@ Public Class Library
 #If Not Debug Then
         Dim w As New MyWebClient
         w.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11")
-        remote = Dns.GetHostEntry("apps.disahome.tk").AddressList(0).ToString
+        remote = Dns.GetHostEntry("apps.disahome.me").AddressList(0).ToString
         Try
-            serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.tk/data/rsapubkey.txt"))
+            serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.me/data/rsapubkey.txt"))
         Catch
             Try
-                serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.tk/data/rsapubkey.txt"))
-            Catch  
+                serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.me/data/rsapubkey.txt"))
+            Catch
                 If File.Exists("rsapubkey.txt") And c(3) Then
                     serverrsa.FromXmlString(File.ReadAllText("rsapubkey.txt"))
                 Else
@@ -75,7 +75,7 @@ Public Class Library
 #End If
         log1.WriteLine("Received IP and public key")
         state = 1
-        Threading.Thread.Sleep(450)
+        Threading.Thread.Sleep(200)
 
         aespass = RandKey(32)
 
@@ -86,7 +86,7 @@ Public Class Library
         End If
 
         state = 2
-        Threading.Thread.Sleep(450)
+        Threading.Thread.Sleep(200)
 
         If staticip Then
             IP = getIP()
@@ -99,7 +99,7 @@ Public Class Library
 
         log1.WriteLine("Connecting to DTun4 Server")
         state = 3
-        Threading.Thread.Sleep(700)
+        Threading.Thread.Sleep(300)
 
         groupEP = New IPEndPoint(IPAddress.Parse(remote), 4955)
         source = groupEP
@@ -130,7 +130,7 @@ Public Class Library
         log1.WriteLine("Connected with server")
         log1.WriteLine("Scanning for network devices...")
         state = 4
-        Threading.Thread.Sleep(600)
+        Threading.Thread.Sleep(300)
 
         Dim i As Integer = -1
         For Each dev As ICaptureDevice In devices
@@ -154,7 +154,7 @@ Public Class Library
         End If
         log1.WriteLine("Device found. Connecting...")
         state = 5
-        Threading.Thread.Sleep(500)
+        Threading.Thread.Sleep(200)
 
 
         device = devices(chdev)
@@ -178,7 +178,7 @@ Public Class Library
             End If
         Next
     End Function
-    Sub SDTun()
+    Public Sub SDTun()
         Try
             log1.Flush()
             thr.Abort()
@@ -189,7 +189,7 @@ Public Class Library
     End Sub
 
 
-    Sub HandlePacket(sender As Object, e As CaptureEventArgs)
+    Private Sub HandlePacket(sender As Object, e As CaptureEventArgs)
         ih.U()
         Dim packet As Byte() = e.Packet.Data
         log1.Write("Captured packet: ")
@@ -212,12 +212,24 @@ Public Class Library
 
     End Sub
 
-    Sub SendMessage(mes As String)
+    Public Sub SendMessage(mes As String)
         chatsender.Send(System.Text.Encoding.Default.GetBytes("CHAT" & mes), System.Text.Encoding.Default.GetByteCount("CHAT" & mes), New IPEndPoint(IPAddress.Parse("31.255.255.255"), 4956))
         chatlines.Add("You: " & mes)
     End Sub
+    Public Sub SendControlMessageReq(ip As String)
+        Try
+            chatsender.Send(System.Text.Encoding.Default.GetBytes("DTun4CM-REQ"), System.Text.Encoding.Default.GetByteCount("DTun4CM-REQ"), New IPEndPoint(IPAddress.Parse(ip), 4957))
+        Catch
+        End Try
+    End Sub
+    Private Sub SendControlMessageReply(ip As String)
+        Try
+            chatsender.Send(System.Text.Encoding.Default.GetBytes("DTun4CM-REP"), System.Text.Encoding.Default.GetByteCount("DTun4CM-REP"), New IPEndPoint(IPAddress.Parse(ip), 4957))
+        Catch
+        End Try
+    End Sub
 
-    Sub ReceivePacket()
+    Private Sub ReceivePacket()
         While True
             Try
                 source = groupEP
@@ -263,6 +275,13 @@ Public Class Library
                         log1.WriteLine("Created chat message from {0}", ip1.SourceAddress.ToString)
                         Continue While
                     End If
+                    If message.Contains("DTun4CM-REQ") Then
+                        If ip1.DestinationAddress.ToString = IP Then
+                            SendControlMessageReply(ip1.SourceAddress.ToString)
+                            log1.WriteLine("CM-REQ: Replied")
+                        End If
+                        Continue While
+                    End If
 
                     device.SendPacket(packet)
                     log1.WriteLine("Created IP packet from {0}", ip1.SourceAddress.ToString)
@@ -286,7 +305,7 @@ Public Class Library
         End While
     End Sub
 
-    Sub ParseTCPIP(pack As Packet, Packet As Byte())
+    Private Sub ParseTCPIP(pack As Packet, Packet As Byte())
         Dim ip1 As IpPacket = IpPacket.GetEncapsulated(pack)
         log1.Write("IP packet: ")
         If ip1.Version = IpVersion.IPv4 Then
@@ -306,7 +325,7 @@ Public Class Library
 
     End Sub
 
-    Sub ParseARP(pack As Packet, Packet As Byte())
+    Private Sub ParseARP(pack As Packet, Packet As Byte())
         Dim arp As ARPPacket = ARPPacket.GetEncapsulated(pack)
         log1.Write("ARP packet: ")
         'And arp.SenderProtocolAddress.ToString = IP
@@ -322,7 +341,7 @@ Public Class Library
 
 
 
-    Public Function AES_Decrypt(ByVal in1 As Byte(), Optional ByVal pass As String = "") As Byte()
+    Private Function AES_Decrypt(ByVal in1 As Byte(), Optional ByVal pass As String = "") As Byte()
         Dim input As String = Convert.ToBase64String(in1)
 
         If pass = "" Then
@@ -346,7 +365,7 @@ Public Class Library
             Return {0}
         End Try
     End Function
-    Public Function AES_Encrypt(ByVal in1 As Byte(), Optional ByVal pass As String = "") As Byte()
+    Private Function AES_Encrypt(ByVal in1 As Byte(), Optional ByVal pass As String = "") As Byte()
         Dim input As String = Convert.ToBase64String(in1)
 
         If pass = "" Then
@@ -372,12 +391,12 @@ Public Class Library
     End Function
 
 
-    Public Function Rand(ByVal Min As Integer, ByVal Max As Integer) As Integer
+    Private Function Rand(ByVal Min As Integer, ByVal Max As Integer) As Integer
         Static Generator As System.Random = New System.Random()
         Return Generator.Next(Min, Max)
     End Function
 
-    Function RandKey(RequiredStringLength As Integer) As String
+    Private Function RandKey(RequiredStringLength As Integer) As String
         Dim CharArray() As Char = "12345ABCDEFGHIJKLMNOPQRSTUVWXYZ67890abcdefghijklmnopqrstuvwxyz".ToCharArray
         Dim sb As New System.Text.StringBuilder
 
@@ -388,8 +407,6 @@ Public Class Library
         Return sb.ToString
 
     End Function
-
-
 
 End Class
 
