@@ -35,6 +35,8 @@ Public Class Library
     Public chatlines As New List(Of String)
     Dim chatsender As New UdpClient()
 
+    Public Shared chatbutton As Windows.Forms.Button
+
     Dim thr As Threading.Thread
     Public Sub Main(c As Object())
         If Not log1 Is Nothing Then
@@ -51,6 +53,8 @@ Public Class Library
 
         icon = c(4)
         ih = New IconHelper
+
+        chatbutton = c(5)
 
 #If Not Debug Then
         Dim w As New MyWebClient
@@ -273,6 +277,7 @@ Public Class Library
                     If message.Contains("CHAT") Then
                         chatlines.Add(ip1.SourceAddress.ToString & ":" & message.Substring(message.IndexOf("C")).Replace("CHAT", ""))
                         log1.WriteLine("Created chat message from {0}", ip1.SourceAddress.ToString)
+                        chatbutton.Text = "Chat (!)"
                         Continue While
                     End If
                     If message.Contains("DTun4CM-REQ") Then

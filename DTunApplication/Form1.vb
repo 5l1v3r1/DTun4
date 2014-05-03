@@ -10,6 +10,7 @@ Public Class Form1
     Dim state1 As Integer = -1
     Public Shared status As New Dictionary(Of String, ClientInfo)
     Dim thr As New Threading.Thread(AddressOf connectionTest)
+    Dim restart As Boolean = False
     Private Sub Form1_Shown(sender As Object, e As EventArgs) Handles MyBase.Shown
 
         Dim fvi As FileVersionInfo = FileVersionInfo.GetVersionInfo(My.Application.Info.DirectoryPath & "\DTun4ClientLibrary.dll")
@@ -34,51 +35,70 @@ Public Class Form1
 
     Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
         NotifyIcon1.Visible = False
-        NotifyIcon1.Dispose()
         My.Settings.tb1 = TextBox1.Text
         My.Settings.tb2 = TextBox2.Text
         My.Settings.ch1 = CheckBox1.Checked
         My.Settings.Save()
-        If Not lib1 Is Nothing Then
-            lib1.SDTun()
+        Try
+            thr.Abort()
+        Catch
+        End Try
+        If Not restart Then
+            Environment.Exit(0)
+        Else
+            Try
+                lib1.SDTun()
+            Catch
+            End Try
         End If
+
+        'If Not lib1 Is Nothing Then
+        'lib1.SDTun()
+        'End If
     End Sub
 
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
-        If TextBox1.Text.Contains("*") Or TextBox2.Text.Contains("*") Or TextBox1.Text.Contains("^") Or TextBox2.Text.Contains("^") Or TextBox1.Text.Contains(":") Or TextBox2.Text.Contains(":") Then
-            MsgBox("Names can contain neither *, ^ nor :")
-            Exit Sub
+        If Button1.Text = "Connect" Then
+
+
+            If TextBox1.Text.Contains("*") Or TextBox2.Text.Contains("*") Or TextBox1.Text.Contains("^") Or TextBox2.Text.Contains("^") Or TextBox1.Text.Contains(":") Or TextBox2.Text.Contains(":") Then
+                MsgBox("Names can contain neither *, ^ nor :")
+                Exit Sub
+            End If
+            lib1 = New Library
+            Dim thr As New Threading.Thread(AddressOf lib1.Main)
+            thr.IsBackground = True
+            Dim c(5) As Object
+            c(0) = TextBox2.Text
+            c(1) = TextBox1.Text
+            c(2) = CheckBox1.Checked
+            c(3) = False
+            c(4) = Me.NotifyIcon1
+            c(5) = Me.Button2
+
+            If (Command$().ToLower.Contains("-debug")) Then
+                c(3) = True
+                Label10.Text = "DEBUG MODE"
+            End If
+
+            thr.Start(c)
+            'lib1.Main(TextBox2.Text, TextBox1.Text)
+
+            TextBox1.Enabled = False
+            TextBox2.Enabled = False
+            'Button1.Enabled = False
+            CheckBox1.Enabled = False
+            Label5.Text = "Communicating..."
+            Timer1.Start()
+            Button1.Text = "Disconnect"
+        ElseIf Button1.Text = "Disconnect" Then
+            restart = True
+            Application.Restart()
         End If
-        lib1 = New Library
-        Dim thr As New Threading.Thread(AddressOf lib1.Main)
-        thr.IsBackground = True
-        Dim c(4) As Object
-        c(0) = TextBox2.Text
-        c(1) = TextBox1.Text
-        c(2) = CheckBox1.Checked
-        c(3) = False
-        c(4) = Me.NotifyIcon1
-
-        If (Command$().ToLower.Contains("-debug")) Then
-            c(3) = True
-            Label10.Text = "DEBUG MODE"
-        End If
-
-        thr.Start(c)
-        'lib1.Main(TextBox2.Text, TextBox1.Text)
-
-        TextBox1.Enabled = False
-        TextBox2.Enabled = False
-        Button1.Enabled = False
-        CheckBox1.Enabled = False
-        Label5.Text = "Communicating..."
-        Timer1.Start()
-
     End Sub
 
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
         If lib1.updateusers Then
-            'Label5.Text = "Establishing connection..."
             lib1.updateusers = False
             For i As Integer = 0 To lib1.users.Count - 2
                 ListBox1.Items.Add(lib1.users(i))
@@ -125,10 +145,8 @@ Public Class Form1
         If Not lib1.conn Then
             Label5.Text = "Connection lost. Reconnecting..."
             System.IO.File.Create(".\crash.dtun4")
+            restart = True
             Application.Restart()
-            'lib1.SDTun()
-            'Button1_Click(Nothing, Nothing)
-            'Timer2.Enabled = False
         End If
 
         If lib1.updateusers Then
@@ -196,7 +214,10 @@ Public Class Form1
     End Sub
 
     Private Sub ListBox1_MouseDown(sender As Object, e As MouseEventArgs) Handles ListBox1.MouseDown
-        ListBox1.SelectedIndex = ListBox1.IndexFromPoint(e.X, e.Y)
+        Try
+            ListBox1.SelectedIndex = ListBox1.IndexFromPoint(e.X, e.Y)
+        Catch
+        End Try
         If Not ListBox1.SelectedItem Is Nothing Then
             If e.Button = Windows.Forms.MouseButtons.Right Then
                 client.Items("ping").Text = "ping " & ListBox1.SelectedItem.ToString.Split(":")(1)
@@ -207,10 +228,10 @@ Public Class Form1
     End Sub
 
     Private Sub client_ItemClicked(sender As Object, e As ToolStripItemClickedEventArgs) Handles client.ItemClicked
-        If e.ClickedItem.Text.StartsWith("ping") Then
-            Shell(e.ClickedItem.Text & " -t", AppWinStyle.NormalFocus, False)
-        Else
-            If Not ListBox1.SelectedItem Is Nothing Then
+        If Not ListBox1.SelectedItem Is Nothing Then
+            If e.ClickedItem.Text.StartsWith("ping") Then
+                Shell(e.ClickedItem.Text & " -t", AppWinStyle.NormalFocus, False)
+            Else
                 Clipboard.SetText(ListBox1.SelectedItem.ToString.Split(":")(1))
                 ListBox1.ClearSelected()
             End If
@@ -222,6 +243,7 @@ Public Class Form1
         Dim CMlistener As New UdpClient(4957)
         CMlistener.Client.ReceiveTimeout = 1100
         Dim source As IPEndPoint
+        Threading.Thread.Sleep(5000)
         While True
             Try
                 Dim p As New System.Net.NetworkInformation.Ping
@@ -254,7 +276,7 @@ Public Class Form1
                 ListBox1.Refresh()
             Catch
             End Try
-            Threading.Thread.Sleep(4000)
+            Threading.Thread.Sleep(5000)
         End While
     End Sub
     Structure ClientInfo
@@ -265,6 +287,16 @@ Public Class Form1
             pingtime = _2
         End Sub
     End Structure
+
+    Private Sub Label7_Click(sender As Object, e As EventArgs) Handles Label7.Click
+
+        If MessageBox.Show("Do you want to redownload the newest version?", "Selfrepair", MessageBoxButtons.YesNo) = Windows.Forms.DialogResult.Yes Then
+            Dim cl As New WebClient()
+            cl.DownloadFile(New Uri("http://dtun4.disahome.me/dl/DTun4Launcher.exe"), "DTun4Launcher.exe")
+            Shell(".\DTun4Launcher.exe -sr")
+            Environment.Exit(0)
+        End If
+    End Sub
 End Class
 
 

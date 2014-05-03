@@ -9,6 +9,7 @@
     ' NetworkAvailabilityChanged: Raised when the network connection is connected or disconnected.
     Partial Friend Class MyApplication
         Private Sub MyApplication_Startup(sender As Object, e As ApplicationServices.StartupEventArgs) Handles Me.Startup
+            
             AddHandler AppDomain.CurrentDomain.UnhandledException, AddressOf KaboomHandler
         End Sub
         Private Sub KaboomHandler(sender As Object, e As UnhandledExceptionEventArgs)

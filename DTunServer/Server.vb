@@ -72,7 +72,7 @@ Module Server
     Dim source As IPEndPoint
     Dim clients As New List(Of IPEndPoint)
     Dim networks As New Dictionary(Of String, List(Of Client))
-
+    Dim log As New IO.StreamWriter("log.txt")
     Sub Main()
         Dim rsa As New RSACryptoServiceProvider()
         'Dim publickey As String = rsa.ToXmlString(True)
@@ -89,7 +89,7 @@ Module Server
         timer.Start()
         timer.Enabled = True
 
-
+        log.WriteLine("Server started successfully")
         While True
             Try
                 Try
@@ -100,6 +100,7 @@ Module Server
                         Dim response As String() = Encoding.Default.GetString(packet).Split({"*"c}, 5)
                         If Not response.GetUpperBound(0) = 4 Then
                             listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), source)
+                            log.WriteLine("RECONNPLS Request sent to: " & source.Address.ToString)
                             Continue While
                         End If
 
@@ -123,14 +124,14 @@ Module Server
                         ' mess &= "*" & rsa.ToXmlString(False)
                         listener.Send(Encoding.Default.GetBytes(mess), Encoding.Default.GetByteCount(mess), source)
 
-                        Console.WriteLine("Added client from: " & source.Address.ToString & ":" & source.Port.ToString)
+                        log.WriteLine("Added client from: " & source.Address.ToString & ":" & source.Port.ToString)
                         Continue While
                     End If
                     Dim net As String = FindNetwork(source)
 
                     If (Encoding.Default.GetString(packet) = "INFOPLS") Then
                         If net = "none" Then
-                            Console.WriteLine("@")
+                            log.WriteLine("Old version client probably")
                             listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), source)
                         Else
                             Dim mess As String = "KFINE"
@@ -153,22 +154,18 @@ Module Server
                             Dim cl As Client = networks(net)(j)
                             Try
                                 listener.Send(cl.Encrypt(pack), cl.Encrypt(pack).Count(), networks(net)(j).EndP)
-                                'listener.Send(packet, packet.Count(), networks(net)(j).EndP)
-                            Catch ex As System.Net.Sockets.SocketException
-                                clients.Remove(networks(net)(j).EndP)
-                                networks(net).Remove(networks(net)(j))
-                                Console.WriteLine("Removed disconnected client")
+                            Catch
                             End Try
                         End If
                     Next
 
                     Console.Write("#")
                 Catch ex As System.Net.Sockets.SocketException
-                    Console.WriteLine("Weird socketexception lol")
+                    log.WriteLine("Ex: " & ex.ToString)
                 End Try
 
             Catch ex As Exception
-                Console.WriteLine("Ex: " & ex.ToString)
+                log.WriteLine("Ex: " & ex.ToString)
             End Try
 
         End While

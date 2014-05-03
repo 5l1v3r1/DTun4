@@ -141,7 +141,6 @@ Partial Class Form1
         'Label7
         '
         Me.Label7.AutoSize = True
-        Me.Label7.Enabled = False
         Me.Label7.ForeColor = System.Drawing.SystemColors.ButtonShadow
         Me.Label7.Location = New System.Drawing.Point(118, 397)
         Me.Label7.Name = "Label7"
