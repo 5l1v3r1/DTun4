@@ -6,6 +6,7 @@ Public Class Updater
     Private Sub Updater_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         If Command$().ToLower.Contains("-sr") Then
+            Threading.Thread.Sleep(2000)
             DlAndStart()
         End If
         If File.Exists(My.Application.Info.DirectoryPath & "\DTun4ClientLibrary.dll") Then

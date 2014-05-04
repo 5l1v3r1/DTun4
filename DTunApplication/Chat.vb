@@ -30,16 +30,6 @@ Public Class Chat
         End Try
     End Sub
     Sub Format()
-        'For line As Integer = 1 To RichTextBox1.Lines.Count() - 1
-        '    If RichTextBox1.Lines(line).StartsWith("You:") Then
-        '        RichTextBox1.Select(RichTextBox1.GetFirstCharIndexFromLine(line), RichTextBox1.Lines(line).Length)
-        '        RichTextBox1.SelectionColor = Color.Black
-        '    Else
-        '        RichTextBox1.Select(RichTextBox1.GetFirstCharIndexFromLine(line), RichTextBox1.Lines(line).Length)
-        '        Dim color1 As String = "#" & GetMd5Hash(System.Security.Cryptography.MD5.Create(), RichTextBox1.Lines(line).Split(":")(0)).Substring(0, 4) & "00"
-        '        RichTextBox1.SelectionColor = System.Drawing.ColorTranslator.FromHtml(color1)
-        '    End If
-        'Next
         Dim lines() As String = RichTextBox1.Text.Split(vbLf)
         Dim startIndex As Integer = 0
         For i As Integer = 0 To lines.Length - 1
