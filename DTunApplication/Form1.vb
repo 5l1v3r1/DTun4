@@ -228,14 +228,14 @@ Public Class Form1
     End Sub
 
     Private Sub client_ItemClicked(sender As Object, e As ToolStripItemClickedEventArgs) Handles client.ItemClicked
-        If Not ListBox1.SelectedItem Is Nothing Then
-            If e.ClickedItem.Text.StartsWith("ping") Then
-                Shell(e.ClickedItem.Text & " -t", AppWinStyle.NormalFocus, False)
-            Else
-                Clipboard.SetText(ListBox1.SelectedItem.ToString.Split(":")(1))
-                ListBox1.ClearSelected()
-            End If
+        'If Not ListBox1.SelectedItem Is Nothing Then
+        If e.ClickedItem.Text.StartsWith("ping") Then
+            Shell(e.ClickedItem.Text & " -t", AppWinStyle.NormalFocus, False)
+        Else
+            Clipboard.SetText(ListBox1.SelectedItem.ToString.Split(":")(1))
+            ListBox1.ClearSelected()
         End If
+        'End If
 
     End Sub
 
@@ -293,6 +293,11 @@ Public Class Form1
         If MessageBox.Show("Do you want to redownload the newest version?", "Selfrepair", MessageBoxButtons.YesNo) = Windows.Forms.DialogResult.Yes Then
             Dim cl As New WebClient()
             cl.DownloadFile(New Uri("http://dtun4.disahome.me/dl/DTun4Launcher.exe"), "DTun4Launcher.exe")
+            Try
+                lib1.SDTun()
+                thr.Abort()
+            Catch
+            End Try
             Shell(".\DTun4Launcher.exe -sr")
             Environment.Exit(0)
         End If

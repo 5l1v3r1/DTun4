@@ -60,21 +60,22 @@ Public Class Library
         Dim w As New MyWebClient
         w.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11")
         remote = Dns.GetHostEntry("apps.disahome.me").AddressList(0).ToString
-        Try
-            serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.me/data/rsapubkey.txt"))
-        Catch
+        If File.Exists("rsapubkey.txt") And c(3) Then
+            serverrsa.FromXmlString(File.ReadAllText("rsapubkey.txt"))
+        Else
             Try
                 serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.me/data/rsapubkey.txt"))
             Catch
-                If File.Exists("rsapubkey.txt") And c(3) Then
-                    serverrsa.FromXmlString(File.ReadAllText("rsapubkey.txt"))
-                Else
+                Try
+                    serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.me/data/rsapubkey.txt"))
+            Catch
                     state = 7
                     MsgBox("Can't download server public RSA key.")
                     Exit Sub
-                End If
+
+                End Try
             End Try
-        End Try
+        End If
         w.Dispose()
 #End If
         log1.WriteLine("Received IP and public key")

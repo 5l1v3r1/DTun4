@@ -75,10 +75,7 @@ Module Server
     Dim log As New IO.StreamWriter("log.txt")
     Sub Main()
         Dim rsa As New RSACryptoServiceProvider()
-        'Dim publickey As String = rsa.ToXmlString(True)
-        'Console.WriteLine(publickey) 'DEBUG
-        'publickey = rsa.ToXmlString(False)
-        'Console.WriteLine(publickey) 'DEBUG
+        
         rsa.FromXmlString(System.IO.File.ReadAllText("priv.key"))
 
         groupEP = New IPEndPoint(IPAddress.Any, 4955)
