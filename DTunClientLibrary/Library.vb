@@ -104,7 +104,7 @@ Public Class Library
 
         log1.WriteLine("Connecting to DTun4 Server")
         state = 3
-        Threading.Thread.Sleep(300)
+        Threading.Thread.Sleep(150)
 
         groupEP = New IPEndPoint(IPAddress.Parse(remote), 4955)
         source = groupEP
@@ -117,12 +117,7 @@ Public Class Library
 
         updateusers = True
         Shell("netsh interface ip set address name=DTun4 source=static addr=" & response(1) & " mask=255.0.0.0 gateway=none", AppWinStyle.Hide, True, -1)
-        'Dim localIPs As IPAddress() = Dns.GetHostAddresses(Dns.GetHostName())
-        'For k As Integer = 0 To localIPs.GetUpperBound(0)
-        '    If localIPs(k).ToString.StartsWith(response(0)) Then
-        '        IP = localIPs(k).ToString
-        '    End If
-        'Next
+        
 
         thr = New Threading.Thread(AddressOf ReceivePacket)
         thr.IsBackground = True
@@ -135,7 +130,7 @@ Public Class Library
         log1.WriteLine("Connected with server")
         log1.WriteLine("Scanning for network devices...")
         state = 4
-        Threading.Thread.Sleep(300)
+        Threading.Thread.Sleep(150)
 
         Dim i As Integer = -1
         For Each dev As ICaptureDevice In devices
@@ -159,7 +154,7 @@ Public Class Library
         End If
         log1.WriteLine("Device found. Connecting...")
         state = 5
-        Threading.Thread.Sleep(200)
+        Threading.Thread.Sleep(150)
 
 
         device = devices(chdev)
@@ -291,18 +286,11 @@ Public Class Library
 
                     device.SendPacket(packet)
                     log1.WriteLine("Created IP packet from {0}", ip1.SourceAddress.ToString)
-                    'Else
-                    ' log1.WriteLine("Received IP packed intended to another device. Skipped.")
-                    'End If
                 End If
 
                 If (Not arp Is Nothing) Then
-                    'If arp.TargetProtocolAddress.ToString = IP Then
                     device.SendPacket(packet)
                     log1.WriteLine("Created ARP packet from {0}", arp.SenderProtocolAddress.ToString)
-                    'Else
-                    'log1.WriteLine("Received ARP packed intended to another device. Skipped.")
-                    'End If
                 End If
 
                 log1.Flush()
@@ -315,8 +303,6 @@ Public Class Library
         Dim ip1 As IpPacket = IpPacket.GetEncapsulated(pack)
         log1.Write("IP packet: ")
         If ip1.Version = IpVersion.IPv4 Then
-            'And ip1.SourceAddress.Equals(IPAddress.Parse(IP))
-            'If Not ip1.DestinationAddress.Equals(IPAddress.Parse(IP)) And Not ip1.DestinationAddress.Equals(IPAddress.Parse("31.255.255.255")) Then
             If ip1.SourceAddress.Equals(IPAddress.Parse(IP)) Then
                 Dim groupEP As New IPEndPoint(IPAddress.Parse(remote), 4955)
                 Packet = AES_Encrypt(Packet)
@@ -334,8 +320,6 @@ Public Class Library
     Private Sub ParseARP(pack As Packet, Packet As Byte())
         Dim arp As ARPPacket = ARPPacket.GetEncapsulated(pack)
         log1.Write("ARP packet: ")
-        'And arp.SenderProtocolAddress.ToString = IP
-        'If Not arp.TargetProtocolAddress.ToString = IP Then
         If arp.SenderProtocolAddress.ToString = IP Then
             Dim groupEP As New IPEndPoint(IPAddress.Parse(remote), 4955)
             listener.Send(AES_Encrypt(Packet), AES_Encrypt(Packet).Count(), groupEP)
@@ -403,7 +387,7 @@ Public Class Library
     End Function
 
     Private Function RandKey(RequiredStringLength As Integer) As String
-        Dim CharArray() As Char = "12345ABCDEFGHIJKLMNOPQRSTUVWXYZ67890abcdefghijklmnopqrstuvwxyz".ToCharArray
+        Dim CharArray() As Char = "12345ABCDEFGHIJKLMNOPQRSTUVWXYZ67890abcdefghijklmnopqrstuvwxyz!@#$%^&*()-=_+,./<>?;':[]{}\|".ToCharArray
         Dim sb As New System.Text.StringBuilder
 
         For index As Integer = 1 To RequiredStringLength

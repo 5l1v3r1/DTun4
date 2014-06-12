@@ -222,21 +222,21 @@ Public Class Form1
             If e.Button = Windows.Forms.MouseButtons.Right Then
                 client.Items("ping").Text = "ping " & ListBox1.SelectedItem.ToString.Split(":")(1)
                 client.Show(MousePosition)
+            Else
+                ListBox1.ClearSelected()
             End If
         End If
-        ListBox1.ClearSelected()
     End Sub
 
     Private Sub client_ItemClicked(sender As Object, e As ToolStripItemClickedEventArgs) Handles client.ItemClicked
-        'If Not ListBox1.SelectedItem Is Nothing Then
         If e.ClickedItem.Text.StartsWith("ping") Then
             Shell(e.ClickedItem.Text & " -t", AppWinStyle.NormalFocus, False)
         Else
             Clipboard.SetText(ListBox1.SelectedItem.ToString.Split(":")(1))
-            ListBox1.ClearSelected()
         End If
-        'End If
-
+    End Sub
+    Private Sub client_Closed(sender As Object, e As ToolStripDropDownClosedEventArgs) Handles client.Closed
+        ListBox1.ClearSelected()
     End Sub
 
     Private Sub connectionTest()
@@ -299,8 +299,11 @@ Public Class Form1
             Catch
             End Try
             cl.Dispose()
+            Threading.Thread.Sleep(200)
             Shell(".\DTun4Launcher.exe -sr")
             Environment.Exit(0)
         End If
     End Sub
+
+   
 End Class
