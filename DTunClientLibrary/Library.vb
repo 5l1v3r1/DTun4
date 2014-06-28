@@ -173,8 +173,8 @@ Public Class Library
     Public Shared Function getIP()
         Dim strHostName As String = System.Net.Dns.GetHostName()
         For i As Integer = 0 To System.Net.Dns.GetHostByName(strHostName).AddressList.Count - 1
-            If System.Net.Dns.GetHostByName(strHostName).AddressList(0).ToString().StartsWith("31.") Then
-                Return System.Net.Dns.GetHostByName(strHostName).AddressList(0).ToString()
+            If System.Net.Dns.GetHostByName(strHostName).AddressList(i).ToString().StartsWith("31.") Then
+                Return System.Net.Dns.GetHostByName(strHostName).AddressList(i).ToString()
             End If
         Next
     End Function
