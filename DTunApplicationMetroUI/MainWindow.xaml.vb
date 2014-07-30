@@ -65,10 +65,11 @@ Class MainWindow
         menuitem.Text = "Ping"
 
         Dim menuitem2 As New Forms.ToolStripMenuItem
-        menuitem.Name = "Ping"
-        menuitem.Text = "Ping"
+        menuitem2.Name = "Copy"
+        menuitem2.Text = "Copy IP"
 
-        client.Items.AddRange({menuitem, menuitem2})
+        client.Items.Add(menuitem)
+        client.Items.Add(menuitem2)
 
         AddHandler client.ItemClicked, AddressOf client_ItemClicked
         AddHandler client.Closed, AddressOf client_Closed
@@ -197,7 +198,7 @@ Class MainWindow
                         Dim pingreply As Net.NetworkInformation.PingReply = p.Send(ListBox1.Items(i).ToString.Split(":")(1), 1100)
                         If pingreply.Status = NetworkInformation.IPStatus.Success Then
                             Dim cl As New ClientInfo(2, pingreply.RoundtripTime)
-                            newstatus(ListBox1.Items(i)) = cl
+                            newstatus(ListBox1.Items(i).ToString) = cl
                         Else
                             lib1.SendControlMessageReq(ListBox1.Items(i).ToString.Split(":")(1))
                             Try
@@ -216,7 +217,7 @@ Class MainWindow
                 Next
                 status = New Dictionary(Of String, ClientInfo)(newstatus)
                 lib1.updateusers = True
-                ListBox1.Items.Refresh()
+                'ListBox1.Items.Refresh()
             Catch
             End Try
             System.Threading.Thread.Sleep(5000)
@@ -284,7 +285,7 @@ Class MainWindow
         Dim bounds = VisualTreeHelper.GetDescendantBounds(target)
         Return bounds.Contains(point)
     End Function
-    Private Sub ListBox1_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles ListBox1.MouseDown
+    Private Sub ListBox1_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles ListBox1.PreviewMouseDown
         Dim index As Integer = -1
         For i As Integer = 0 To ListBox1.Items.Count - 1
             Dim lbi = TryCast(ListBox1.ItemContainerGenerator.ContainerFromIndex(i), ListBoxItem)
