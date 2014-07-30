@@ -35,7 +35,8 @@ Public Class Library
     Public chatlines As New List(Of String)
     Dim chatsender As New UdpClient()
 
-    Public Shared chatbutton As Windows.Forms.Button
+    'Public Shared chatbutton As Windows.Forms.Button
+    Public Shared chatbutton
 
     Dim thr As Threading.Thread
     Public Sub Main(c As Object())
@@ -122,15 +123,18 @@ Public Class Library
         thr = New Threading.Thread(AddressOf ReceivePacket)
         thr.IsBackground = True
 
+
+        log1.WriteLine("Connected with server")
+        log1.WriteLine("Scanning for network devices...")
+        state = 4
+        Threading.Thread.Sleep(150)
+
         log1.Flush()
         Dim devices As CaptureDeviceList = CaptureDeviceList.Instance()
         Dim chdev As Integer = -1
 
         'Dim log As String = ""
-        log1.WriteLine("Connected with server")
-        log1.WriteLine("Scanning for network devices...")
-        state = 4
-        Threading.Thread.Sleep(150)
+        
 
         Dim i As Integer = -1
         For Each dev As ICaptureDevice In devices
@@ -273,7 +277,8 @@ Public Class Library
                     If message.Contains("CHAT") Then
                         chatlines.Add(ip1.SourceAddress.ToString & ":" & message.Substring(message.IndexOf("C")).Replace("CHAT", ""))
                         log1.WriteLine("Created chat message from {0}", ip1.SourceAddress.ToString)
-                        chatbutton.Text = "Chat (!)"
+                        'chatbutton.Text = "Chat (!)"
+                        chatbutton.Content = "Chat (!)" 'WPF FIX
                         Continue While
                     End If
                     If message.Contains("DTun4CM-REQ") Then

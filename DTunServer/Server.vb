@@ -58,7 +58,7 @@ Module Server
                         ' mess &= "*" & rsa.ToXmlString(False)
                         listener.Send(Encoding.Default.GetBytes(mess), Encoding.Default.GetByteCount(mess), source)
 
-                        log.WriteLine("Added client from: " & source.Address.ToString & ":" & source.Port.ToString)
+                        log.WriteLine("Added client from: " & source.Address.ToString & ":" & source.Port.ToString & " - " & response(1))
                         Continue While
                     End If
                     Dim net As String = FindNetwork(source)
@@ -92,7 +92,7 @@ Module Server
                             End Try
                         End If
                     Next
-
+                    log.Flush()
                     Console.Write("#")
                 Catch ex As System.Net.Sockets.SocketException
                     log.WriteLine("Ex: " & ex.ToString)

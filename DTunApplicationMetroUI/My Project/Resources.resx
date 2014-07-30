@@ -117,71 +117,26 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="Timer1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>21, 17</value>
-  </metadata>
-  <metadata name="Timer2.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>106, 17</value>
-  </metadata>
-  <metadata name="NotifyIcon1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>294, 17</value>
-  </metadata>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="NotifyIcon1.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABMLAAATCwAAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAqKio/6ioqP+oqKj/qKio/wAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADPz8//z8/P/wAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAvb297bm5uf+2trb/tra2/7a2
-        tv+2trb/tra27be3t84AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACoqKj/qKio/9LS0v8zMzP/ODg4/zg4
-        OP84ODj/ODg4/zU1Nf/Pz8/sAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM/Pz//Ozs7/ODg4/zw8
-        PP88PDz/PDw8/zw8PP84ODj/vLy8/wAAAAAAAAAAAAAAAAAAAAC9vb3/ubm5/7a2tv+2trb/zMzM/0BA
-        QP9LS0v/S0tL/0tLS/9LS0v/RkZG/9fX1/8AAAAAAAAAAAAAAAAAAAAA0tLS/zw8PP88PDz/ICAg/7u7
-        u/9TU1P/WFhY/1hYWP9YWFj/WFhY/1NTU//X19fsAAAAAAAAAAAAAAAAAAAAAMnJyf88PDz/PDw8/yAg
-        IP+Xl5f/S0tL/05OTv9OTk7/Tk5O/05OTv9OTk7/29vbuwAAAAAAAAAAAAAAAAAAAADX19f/RERE/0tL
-        S/8oKCj/tbW1/7m5uf/ExMT/2NjY/9nZ2drZ2dna29vbu93d3a0AAAAAAAAAAAAAAAAAAAAA19fX/1hY
-        WP9YWFj/Ly8v/ywsLP8vLy//Ly8v/9fX1/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANfX
-        1/9YWFj/WFhY/1hYWP9YWFj/WFhY/1hYWP/X19f/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        AADX19f/19fX/9fX1//X19f/19fX/9fX1//X19f/19fX/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        AAAAAAAA//8AAP//AAD/DwAA/58AAPwDAADwAwAA+AMAAMADAADAAwAAwAMAAMADAADAPwAAwD8AAMA/
-        AAD//wAA//8AAA==
-</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="_0" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\_0.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <metadata name="Timer3.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>409, 17</value>
-  </metadata>
-  <metadata name="client.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>206, 23</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>56</value>
-  </metadata>
-  <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABMLAAATCwAAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAqKio/6ioqP+oqKj/qKio/wAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADPz8//z8/P/wAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAvb297bm5uf+2trb/tra2/7a2
-        tv+2trb/tra27be3t84AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACoqKj/qKio/9LS0v8zMzP/ODg4/zg4
-        OP84ODj/ODg4/zU1Nf/Pz8/sAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM/Pz//Ozs7/ODg4/zw8
-        PP88PDz/PDw8/zw8PP84ODj/vLy8/wAAAAAAAAAAAAAAAAAAAAC9vb3/ubm5/7a2tv+2trb/zMzM/0BA
-        QP9LS0v/S0tL/0tLS/9LS0v/RkZG/9fX1/8AAAAAAAAAAAAAAAAAAAAA0tLS/zw8PP88PDz/ICAg/7u7
-        u/9TU1P/WFhY/1hYWP9YWFj/WFhY/1NTU//X19fsAAAAAAAAAAAAAAAAAAAAAMnJyf88PDz/PDw8/yAg
-        IP+Xl5f/S0tL/05OTv9OTk7/Tk5O/05OTv9OTk7/29vbuwAAAAAAAAAAAAAAAAAAAADX19f/RERE/0tL
-        S/8oKCj/tbW1/7m5uf/ExMT/2NjY/9nZ2drZ2dna29vbu93d3a0AAAAAAAAAAAAAAAAAAAAA19fX/1hY
-        WP9YWFj/Ly8v/ywsLP8vLy//Ly8v/9fX1/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANfX
-        1/9YWFj/WFhY/1hYWP9YWFj/WFhY/1hYWP/X19f/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        AADX19f/19fX/9fX1//X19f/19fX/9fX1//X19f/19fX/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        AAAAAAAA//8AAP//AAD/DwAA/58AAPwDAADwAwAA+AMAAMADAADAAwAAwAMAAMADAADAPwAAwD8AAMA/
-        AAD//wAA//8AAA==
-</value>
+  <data name="_1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\_1.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="_11" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\1.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="_2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\_2.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="_3" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\_3.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="_31" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\3.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="_4" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\4.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

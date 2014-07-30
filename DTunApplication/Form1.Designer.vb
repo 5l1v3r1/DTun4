@@ -206,19 +206,19 @@ Partial Class Form1
         '
         Me.client.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ping, Me.ToolStripMenuItem1})
         Me.client.Name = "ContextMenuStrip1"
-        Me.client.Size = New System.Drawing.Size(153, 70)
+        Me.client.Size = New System.Drawing.Size(116, 48)
         Me.client.Text = "Connected client"
         '
         'ping
         '
         Me.ping.Name = "ping"
-        Me.ping.Size = New System.Drawing.Size(152, 22)
+        Me.ping.Size = New System.Drawing.Size(115, 22)
         Me.ping.Text = "Ping"
         '
         'ToolStripMenuItem1
         '
         Me.ToolStripMenuItem1.Name = "ToolStripMenuItem1"
-        Me.ToolStripMenuItem1.Size = New System.Drawing.Size(152, 22)
+        Me.ToolStripMenuItem1.Size = New System.Drawing.Size(115, 22)
         Me.ToolStripMenuItem1.Text = "Copy IP"
         '
         'Label10
