@@ -20,7 +20,7 @@ Partial Class MainWindow
     Dim NotifyIcon1 As New Windows.Forms.NotifyIcon
     Dim client As New Forms.ContextMenuStrip
     Dim menufor As String
-    Private Sub MetroWindow_Loaded(sender As Object, e As RoutedEventArgs)
+    Private Async Sub MetroWindow_Loaded(sender As Object, e As RoutedEventArgs)
         Label9.Content = Library.getIP()
         If System.IO.File.Exists(".\crash.dtun4") Then
             System.IO.File.Delete(".\crash.dtun4")
@@ -56,7 +56,8 @@ Partial Class MainWindow
         End If
 #If Not Debug Then
         If Not (Command$().ToLower.Contains("-updated")) Then
-            MessageBox.Show("Start application using updater")
+            'MessageBox.Show("Start application using updater")
+            Await ShowMessageAsync("Error", "Start application using updater")
             Environment.Exit(1)
             Exit Sub
         End If
