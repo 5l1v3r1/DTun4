@@ -4,7 +4,11 @@ Imports System.Runtime.InteropServices
 Imports System.Windows.Forms
 Imports System.Drawing
 Imports System.Net.Sockets
-Class MainWindow
+Imports MahApps.Metro.Controls
+Imports MahApps.Metro.Controls.Dialogs
+
+Partial Class MainWindow
+
     Public Shared lib1 As Library
     Dim state1 As Integer = -1
     Public Shared status As New Dictionary(Of String, ClientInfo)
@@ -15,6 +19,7 @@ Class MainWindow
     Dim Timer3 As New Windows.Forms.Timer
     Dim NotifyIcon1 As New Windows.Forms.NotifyIcon
     Dim client As New Forms.ContextMenuStrip
+    Dim menufor As String
     Private Sub MetroWindow_Loaded(sender As Object, e As RoutedEventArgs)
         Label9.Content = Library.getIP()
         If System.IO.File.Exists(".\crash.dtun4") Then
@@ -25,7 +30,17 @@ Class MainWindow
             CheckBox1.IsEnabled = False
             Label5.Content = "Network error. Reconnecting in 10 seconds..."
             ProgressBar1.Value = 100
-            'Modify.SetState(ProgressBar1, 2)'TOFIX
+
+            Dim linear As LinearGradientBrush = New LinearGradientBrush()
+            linear.StartPoint = New System.Windows.Point(0, 0)
+            linear.EndPoint = New System.Windows.Point(1, 1)
+            linear.SpreadMethod = GradientSpreadMethod.Pad
+            linear.ColorInterpolationMode = ColorInterpolationMode.SRgbLinearInterpolation
+            linear.GradientStops.Add(New GradientStop(System.Windows.Media.Color.FromArgb(255, 205, 0, 0), 0))
+            linear.GradientStops.Add(New GradientStop(System.Windows.Media.Color.FromArgb(255, 160, 0, 0), 1))
+
+            ProgressBar1.Foreground = linear
+
             Timer3.Start()
         End If
 
@@ -48,6 +63,11 @@ Class MainWindow
 #End If
         WindowState = WindowState.Normal
 
+
+        Dim solidbrush As New SolidColorBrush()
+        solidbrush.Color = System.Windows.Media.Color.FromArgb(255, 0, 128, 255)
+
+        ProgressBar1.Foreground = solidbrush
 
         Timer1.Interval = 35
         Timer2.Interval = 2000
@@ -73,6 +93,8 @@ Class MainWindow
 
         AddHandler client.ItemClicked, AddressOf client_ItemClicked
         AddHandler client.Closed, AddressOf client_Closed
+
+        ListBox1.AddHandler(UIElement.MouseDownEvent, New MouseButtonEventHandler(AddressOf ListBox1_MouseDown), True)
     End Sub
 
     Private Sub Timer1_Tick(sender As Object, e As EventArgs)
@@ -87,7 +109,6 @@ Class MainWindow
                     cl = New ClientListBox(lib1.users(i), "0", 3)
                 End If
 
-                'ListBox1.Items.Add(lib1.users(i))
                 clc.Add(cl)
             Next
             ListBox1.DataContext = clc
@@ -117,7 +138,15 @@ Class MainWindow
             ElseIf state1 = 7 Then
                 Label5.Content = "Error"
                 ProgressBar1.Value = 50
-                'Modify.SetState(ProgressBar1, 2)' TOFIX
+                Dim linear As LinearGradientBrush = New LinearGradientBrush()
+                linear.StartPoint = New System.Windows.Point(0, 0)
+                linear.EndPoint = New System.Windows.Point(1, 1)
+                linear.SpreadMethod = GradientSpreadMethod.Pad
+                linear.ColorInterpolationMode = ColorInterpolationMode.SRgbLinearInterpolation
+                linear.GradientStops.Add(New GradientStop(System.Windows.Media.Color.FromArgb(255, 205, 0, 0), 0))
+                linear.GradientStops.Add(New GradientStop(System.Windows.Media.Color.FromArgb(255, 160, 0, 0), 1))
+
+                ProgressBar1.Foreground = linear
             End If
         End If
         If lib1.conn Then
@@ -159,7 +188,11 @@ Class MainWindow
         If ProgressBar1.Value > 10 Then
             ProgressBar1.Value -= 10
         Else
-            'Modify.SetState(ProgressBar1, 1) 'TOFIX
+            Dim solidbrush As New SolidColorBrush()
+            solidbrush.Color = System.Windows.Media.Color.FromArgb(255, 0, 128, 255)
+
+            ProgressBar1.Foreground = solidbrush
+
             ProgressBar1.Value = 0
             Timer3.Enabled = False
             Dim ch As Boolean = False
@@ -204,14 +237,14 @@ Class MainWindow
                             Try
                                 If Encoding.Default.GetString(CMlistener.Receive(source)) = "DTun4CM-REP" Then
                                     Dim cl1 As New ClientInfo(1, 0)
-                                    newstatus(ListBox1.Items(i)) = cl1
+                                    newstatus(ListBox1.Items(i).ToString) = cl1
                                     Continue For
                                 End If
                             Catch e As Exception
 
                             End Try
                             Dim cl2 As New ClientInfo(0, 0)
-                            newstatus(ListBox1.Items(i)) = cl2
+                            newstatus(ListBox1.Items(i).ToString) = cl2
                         End If
                     End If
                 Next
@@ -232,9 +265,11 @@ Class MainWindow
         End Sub
     End Structure
 
-    Private Sub Label7_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles Label7.MouseLeftButtonUp
+    Private Async Sub Label7_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles Label7.PreviewMouseDown
 
-        If MessageBox.Show("Do you want to redownload the newest version?", "Selfrepair", MessageBoxButtons.YesNo) = Windows.Forms.DialogResult.Yes Then 'TOFIX
+        Dim result As MessageDialogResult = Await ShowMessageAsync("Selfrepair", "Do you want to redownload the newest version?", MessageDialogStyle.AffirmativeAndNegative)
+        If result = MessageDialogResult.Affirmative Then
+
             Dim cl As New WebClient()
             cl.DownloadFile(New Uri("http://dtun4.disahome.me/dl/DTun4Launcher.exe"), "DTun4Launcher.exe")
             Try
@@ -276,31 +311,19 @@ Class MainWindow
         End If
     End Sub
 
-    Private Sub Button2_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles Button2.MouseLeftButtonUp
-        'Dim chatwindow As New Chat
-        ' chatwindow.Show() "TOFIX
+    Private Sub Button2_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles Button2.PreviewMouseDown
+        Dim chatwindow As New Chat
+        chatwindow.Show()
         Button2.Content = "Chat"
     End Sub
-    Private Shared Function IsMouseOverTarget(target As Visual, point As System.Windows.Point) As Boolean
-        Dim bounds = VisualTreeHelper.GetDescendantBounds(target)
-        Return bounds.Contains(point)
-    End Function
-    Private Sub ListBox1_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles ListBox1.PreviewMouseDown
-        Dim index As Integer = -1
-        For i As Integer = 0 To ListBox1.Items.Count - 1
-            Dim lbi = TryCast(ListBox1.ItemContainerGenerator.ContainerFromIndex(i), ListBoxItem)
-            If lbi Is Nothing Then
-                Continue For
-            End If
-            If IsMouseOverTarget(lbi, e.GetPosition(DirectCast(lbi, IInputElement))) Then
-                index = i
-                Exit For
-            End If
-        Next
+
+    Private Sub ListBox1_MouseDown(sender As Object, e As MouseButtonEventArgs)
+
         If Not ListBox1.SelectedItem Is Nothing Then
             If e.RightButton = MouseButtonState.Pressed Then
                 client.Items("ping").Text = "ping " & ListBox1.SelectedItem.ToString.Split(":")(1)
                 client.Show(Control.MousePosition)
+                menufor = ListBox1.SelectedItem.ToString.Split(":")(1)
             Else
                 ListBox1.UnselectAll()
             End If
@@ -310,7 +333,7 @@ Class MainWindow
         If e.ClickedItem.Text.StartsWith("ping") Then
             Microsoft.VisualBasic.Shell(e.ClickedItem.Text & " -t", AppWinStyle.NormalFocus, False)
         Else
-            Clipboard.SetText(ListBox1.SelectedItem.ToString.Split(":")(1))
+            Clipboard.SetText(menufor)
         End If
     End Sub
     Private Sub client_Closed(sender As Object, e As ToolStripDropDownClosedEventArgs)
@@ -322,7 +345,7 @@ Class MainWindow
 
 
             If TextBox1.Text.Contains("*") Or TextBox2.Text.Contains("*") Or TextBox1.Text.Contains("^") Or TextBox2.Text.Contains("^") Or TextBox1.Text.Contains(":") Or TextBox2.Text.Contains(":") Then
-                MsgBox("Names can contain neither *, ^ nor :") 'TOFIX
+                ShowMessageAsync("Error", "Names can contain neither *, ^ nor :")
                 Exit Sub
             End If
             lib1 = New Library

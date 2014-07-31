@@ -1,0 +1,19 @@
+﻿<controls:MetroWindow x:Class="Chat"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:wf="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
+                      GlowBrush="{DynamicResource AccentColorBrush}"
+    Title="Chat" Height="300" Width="300" ResizeMode="CanMinimize" Loaded="MetroWindow_Loaded">
+    <Grid>
+        <WindowsFormsHost Margin="10,10,10,41">
+            <wf:RichTextBox x:Name="RichTextBox1" Height="220" Margin="10,10,0,0"  Width="274"/>
+        </WindowsFormsHost>
+
+        <TextBox x:Name="TextBox1" HorizontalAlignment="Left" Height="23" Margin="10,235,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="233"/>
+        <Button Content="Send" HorizontalAlignment="Left" Margin="248,235,0,0" VerticalAlignment="Top" Width="36" Style="{DynamicResource SquareButtonStyle}" Height="26" PreviewMouseDown="Button_PreviewMouseDown" />
+        
+            
+
+    </Grid>
+</controls:MetroWindow>

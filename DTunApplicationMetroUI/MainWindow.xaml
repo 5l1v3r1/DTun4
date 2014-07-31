@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                       GlowBrush="{DynamicResource AccentColorBrush}"
-    Title="DTun4" Height="458" Width="301" ResizeMode="CanMinimize" Loaded="MetroWindow_Loaded" Closing="MetroWindow_Closing" SizeChanged="MetroWindow_SizeChanged" >
+    Title="DTun4" Height="458" Width="301" ResizeMode="CanMinimize" Loaded="MetroWindow_Loaded" Closing="MetroWindow_Closing" SizeChanged="MetroWindow_SizeChanged" Icon="dtun-trans.ico" >
     <Grid>
         <Label Content="Computer name: " HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
         <Label Content="Network name:" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
@@ -12,14 +12,14 @@
         <TextBox x:Name="TextBox1" HorizontalAlignment="Left" Height="22" Margin="117,41,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="166"/>
         <Label x:Name="Label9" Content="" HorizontalAlignment="Left" Margin="26,72,0,0" VerticalAlignment="Top" Width="86"/>
         <CheckBox x:Name="CheckBox1" Content="Request static IP" HorizontalAlignment="Left" Margin="117,76,0,0" VerticalAlignment="Top" Width="166"/>
-        <Button x:Name="Button1" Content="Connect" HorizontalAlignment="Left" Margin="10,103,0,0" VerticalAlignment="Top" Width="273"/>
+        <Button x:Name="Button1" Content="Connect" HorizontalAlignment="Left" Margin="10,103,0,0" VerticalAlignment="Top" Width="273" Style="{DynamicResource SquareButtonStyle}"/>
         <Label Content="Status:" HorizontalAlignment="Left" Margin="10,133,0,0" VerticalAlignment="Top"/>
         <Label x:Name="Label5" Content="Disconnected" HorizontalAlignment="Left" Margin="60,133,0,0" VerticalAlignment="Top" Width="223"/>
-        <ProgressBar x:Name="ProgressBar1" HorizontalAlignment="Left" Margin="10,159,0,0" VerticalAlignment="Top" Width="273" Height="23"/>
-        <Button x:Name="Button2" Content="Chat" HorizontalAlignment="Left" Margin="207,187,0,0" VerticalAlignment="Top" Width="76"/>
+        <ProgressBar Style="{x:Null}" x:Name="ProgressBar1" HorizontalAlignment="Left" Margin="10,159,0,0" VerticalAlignment="Top" Width="273" Height="23"/>
+        <Button x:Name="Button2" Content="Chat" HorizontalAlignment="Left" Margin="207,187,0,0" VerticalAlignment="Top" Width="76" Style="{DynamicResource SquareButtonStyle}" IsEnabled="False"/>
         <Label Content="Connected clients:" HorizontalAlignment="Left" Margin="10,187,0,0" VerticalAlignment="Top"/>
         <Label Content="ClientLibrary Version: " HorizontalAlignment="Left" Margin="10,397,0,0" VerticalAlignment="Top" IsEnabled="False"/>
-        <Label x:Name="Label7" Content="1.0" HorizontalAlignment="Left" Margin="140,397,0,0" VerticalAlignment="Top" IsEnabled="False"/>
+        <Label x:Name="Label7" Content="1.0" HorizontalAlignment="Left" Margin="140,397,0,0" VerticalAlignment="Top" Foreground="#FF646464"/>
         <ListBox x:Name="ListBox1" HorizontalAlignment="Left" Height="174" Margin="10,218,0,0" VerticalAlignment="Top" Width="275" ItemsSource="{Binding}"
             >
             <ListBox.ItemTemplate>
