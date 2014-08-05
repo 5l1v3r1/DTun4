@@ -6,6 +6,7 @@ Imports System.Drawing
 Imports System.Net.Sockets
 Imports MahApps.Metro.Controls
 Imports MahApps.Metro.Controls.Dialogs
+Imports System.Windows.Threading
 
 Partial Class MainWindow
 
@@ -20,7 +21,7 @@ Partial Class MainWindow
     Dim NotifyIcon1 As New Windows.Forms.NotifyIcon
     Dim client As New Forms.ContextMenuStrip
     Dim menufor As String
-    Private Async Sub MetroWindow_Loaded(sender As Object, e As RoutedEventArgs)
+    Private Sub MetroWindow_Loaded(sender As Object, e As RoutedEventArgs)
         Label9.Content = Library.getIP()
         If System.IO.File.Exists(".\crash.dtun4") Then
             System.IO.File.Delete(".\crash.dtun4")
@@ -57,8 +58,11 @@ Partial Class MainWindow
 #If Not Debug Then
         If Not (Command$().ToLower.Contains("-updated")) Then
             'MessageBox.Show("Start application using updater")
-            Await ShowMessageAsync("Error", "Start application using updater")
-            Environment.Exit(1)
+            'Await ShowMessageAsync("Error", "Start application using updater")
+            Dim thr5 As New System.Threading.Thread(AddressOf error1)
+            thr5.IsBackground = True
+            thr5.Start()
+            'Environment.Exit(1)
             Exit Sub
         End If
 #End If
@@ -97,7 +101,13 @@ Partial Class MainWindow
 
         ListBox1.AddHandler(UIElement.MouseDownEvent, New MouseButtonEventHandler(AddressOf ListBox1_MouseDown), True)
     End Sub
-
+    Sub error1()
+        Dim task As task
+        Application.Current.Dispatcher.Invoke(DispatcherPriority.Normal, (Sub() task = ShowMessageAsync("Error", "Start application using updater")))
+        'task.Start()
+        task.Wait()
+        Environment.Exit(1)
+    End Sub
     Private Sub Timer1_Tick(sender As Object, e As EventArgs)
         If lib1.updateusers Then
             lib1.updateusers = False
@@ -266,11 +276,19 @@ Partial Class MainWindow
         End Sub
     End Structure
 
-    Private Async Sub Label7_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles Label7.PreviewMouseDown
+    Private Sub Label7_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles Label7.PreviewMouseDown
 
-        Dim result As MessageDialogResult = Await ShowMessageAsync("Selfrepair", "Do you want to redownload the newest version?", MessageDialogStyle.AffirmativeAndNegative)
-        If result = MessageDialogResult.Affirmative Then
+        Dim thr5 As New System.Threading.Thread(AddressOf question1)
+        thr5.IsBackground = True
+        thr5.Start()
+        Exit Sub
+    End Sub
 
+    Sub question1()
+        Dim task As Task(Of MessageDialogResult)
+        Application.Current.Dispatcher.Invoke(DispatcherPriority.Normal, (Sub() task = ShowMessageAsync("Selfrepair", "Do you want to redownload the newest version?", MessageDialogStyle.AffirmativeAndNegative)))
+        task.Wait()
+        If task.Result = MessageDialogResult.Affirmative Then
             Dim cl As New WebClient()
             cl.DownloadFile(New Uri("http://dtun4.disahome.me/dl/DTun4Launcher.exe"), "DTun4Launcher.exe")
             Try
@@ -283,9 +301,8 @@ Partial Class MainWindow
             Microsoft.VisualBasic.Shell(".\DTun4Launcher.exe -sr")
             Environment.Exit(0)
         End If
+
     End Sub
-
-
     Private Sub MetroWindow_Closing(sender As Object, e As System.ComponentModel.CancelEventArgs)
         NotifyIcon1.Visible = False
         My.Settings.tb1 = TextBox1.Text
