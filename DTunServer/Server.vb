@@ -152,34 +152,23 @@ Module Server
     End Sub
 
     Public Function AES_Decrypt(ByVal in1 As Byte(), ByVal pass As Byte()) As Byte()
-        Dim input As String = Convert.ToBase64String(in1)
-
-        Dim AES As New System.Security.Cryptography.RijndaelManaged
-        Dim decrypted As String = ""
+        Dim AES As New System.Security.Cryptography.AesManaged
         Try
             AES.Key = pass
             AES.Mode = CipherMode.ECB
-            Dim DESDecrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateDecryptor
-            Dim Buffer As Byte() = Convert.FromBase64String(input)
-            decrypted = System.Text.ASCIIEncoding.ASCII.GetString(DESDecrypter.TransformFinalBlock(Buffer, 0, Buffer.Length))
-            Return Convert.FromBase64String(decrypted)
+            Dim AESDecrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateDecryptor
+            Return AESDecrypter.TransformFinalBlock(in1, 0, in1.Length)
         Catch ex As Exception
             Return {0}
         End Try
     End Function
     Public Function AES_Encrypt(ByVal in1 As Byte(), ByVal pass As Byte()) As Byte()
-        Dim input As String = Convert.ToBase64String(in1)
-
-
-        Dim AES As New System.Security.Cryptography.RijndaelManaged
-        Dim encrypted As String = ""
+       Dim AES As New System.Security.Cryptography.AesManaged
         Try
             AES.Key = pass
             AES.Mode = CipherMode.ECB
-            Dim DESEncrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateEncryptor
-            Dim Buffer As Byte() = System.Text.ASCIIEncoding.ASCII.GetBytes(input)
-            encrypted = Convert.ToBase64String(DESEncrypter.TransformFinalBlock(Buffer, 0, Buffer.Length))
-            Return Convert.FromBase64String(encrypted)
+            Dim AESEncrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateEncryptor
+            Return AESEncrypter.TransformFinalBlock(in1, 0, in1.Length)
         Catch ex As Exception
             Return {0}
         End Try
