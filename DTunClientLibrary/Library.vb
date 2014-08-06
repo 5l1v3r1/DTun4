@@ -25,7 +25,7 @@ Public Class Library
     Public oldusers() As String = {""}
     Public conn As Boolean = False
     Dim serverrsa As New RSACryptoServiceProvider()
-    Dim aespass As String
+    Dim aespass(31) As Byte
     Public state As Integer = 0
 
     Public Shared icon As System.Windows.Forms.NotifyIcon
@@ -83,10 +83,17 @@ Public Class Library
         state = 1
         Threading.Thread.Sleep(200)
 
-        aespass = RandKey(32)
+        Dim salt1(8) As Byte
+        Using rngCsp As New RNGCryptoServiceProvider()
+            rngCsp.GetBytes(salt1)
+        End Using
 
+        Dim k1 As New Rfc2898DeriveBytes(RandKey(32), salt1, 100000)
+        aespass = k1.GetBytes(32)
+        k1.Reset()
+        k1.Dispose()
         If c(3) = True Then
-            log1.WriteLine("Generated AES key - DEBUG - " & aespass)
+            log1.WriteLine("Generated AES key - DEBUG - " & Encoding.Default.GetString(aespass))
         Else
             log1.WriteLine("Generated AES key")
         End If
@@ -109,7 +116,7 @@ Public Class Library
 
         groupEP = New IPEndPoint(IPAddress.Parse(remote), 4955)
         source = groupEP
-        listener.Send(Encoding.Default.GetBytes(String.Format("HELO*{0}*{1}*{2}*{3}", cname, nname, IP, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(System.Text.Encoding.Default.GetBytes(aespass), True)))), Encoding.Default.GetByteCount(String.Format("HELO*{0}*{1}*{2}*{3}", cname, nname, IP, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(System.Text.Encoding.Default.GetBytes(aespass), True)))), groupEP)
+        listener.Send(Encoding.Default.GetBytes(String.Format("HELO*{0}*{1}*{2}*{3}", cname, nname, IP, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(aespass, True)))), Encoding.Default.GetByteCount(String.Format("HELO*{0}*{1}*{2}*{3}", cname, nname, IP, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(aespass, True)))), groupEP)
 
         Dim response() As String = Encoding.Default.GetString(listener.Receive(source)).Split({"*"c}, 3)
         IP = response(1)
@@ -336,45 +343,29 @@ Public Class Library
 
 
 
-    Private Function AES_Decrypt(ByVal in1 As Byte(), Optional ByVal pass As String = "") As Byte()
+    Private Function AES_Decrypt(ByVal in1 As Byte()) As Byte()
         Dim input As String = Convert.ToBase64String(in1)
 
-        If pass = "" Then
-            pass = aespass
-        End If
         Dim AES As New System.Security.Cryptography.RijndaelManaged
-        Dim Hash_AES As New System.Security.Cryptography.MD5CryptoServiceProvider
         Dim decrypted As String = ""
         Try
-            Dim hash(31) As Byte
-            Dim temp As Byte() = Hash_AES.ComputeHash(System.Text.ASCIIEncoding.ASCII.GetBytes(pass))
-            Array.Copy(temp, 0, hash, 0, 16)
-            Array.Copy(temp, 0, hash, 15, 16)
-            AES.Key = hash
+            AES.Key = aespass
             AES.Mode = CipherMode.ECB
-            Dim DESDecrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateDecryptor
+            Dim AESDecrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateDecryptor
             Dim Buffer As Byte() = Convert.FromBase64String(input)
-            decrypted = System.Text.ASCIIEncoding.ASCII.GetString(DESDecrypter.TransformFinalBlock(Buffer, 0, Buffer.Length))
+            decrypted = System.Text.ASCIIEncoding.ASCII.GetString(AESDecrypter.TransformFinalBlock(Buffer, 0, Buffer.Length))
             Return Convert.FromBase64String(decrypted)
         Catch ex As Exception
             Return {0}
         End Try
     End Function
-    Private Function AES_Encrypt(ByVal in1 As Byte(), Optional ByVal pass As String = "") As Byte()
+    Private Function AES_Encrypt(ByVal in1 As Byte()) As Byte()
         Dim input As String = Convert.ToBase64String(in1)
 
-        If pass = "" Then
-            pass = aespass
-        End If
         Dim AES As New System.Security.Cryptography.RijndaelManaged
-        Dim Hash_AES As New System.Security.Cryptography.MD5CryptoServiceProvider
         Dim encrypted As String = ""
         Try
-            Dim hash(31) As Byte
-            Dim temp As Byte() = Hash_AES.ComputeHash(System.Text.ASCIIEncoding.ASCII.GetBytes(pass))
-            Array.Copy(temp, 0, hash, 0, 16)
-            Array.Copy(temp, 0, hash, 15, 16)
-            AES.Key = hash
+            AES.Key = aespass
             AES.Mode = CipherMode.ECB
             Dim DESEncrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateEncryptor
             Dim Buffer As Byte() = System.Text.ASCIIEncoding.ASCII.GetBytes(input)
@@ -392,7 +383,7 @@ Public Class Library
     End Function
 
     Private Function RandKey(RequiredStringLength As Integer) As String
-        Dim CharArray() As Char = "12345ABCDEFGHIJKLMNOPQRSTUVWXYZ67890abcdefghijklmnopqrstuvwxyz!@#$%^&*()-=_+,./<>?;':[]{}\|".ToCharArray
+        Dim CharArray() As Char = "(CMWXp),./<123wxyz!@#$%^[]{hijkOPY&*>0ab':Z67cKLsQRSEFGHIJ?;8TUdefg-=_+4vmnoV5ABqrD9tul}\|".ToCharArray
         Dim sb As New System.Text.StringBuilder
 
         For index As Integer = 1 To RequiredStringLength

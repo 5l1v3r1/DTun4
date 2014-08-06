@@ -6,7 +6,7 @@ Class Client
     Private nname As String
     Private net As String
     Private timeout As Integer
-    Private aes As String
+    Private aes() As Byte
     Property IP() As String
         Get
             Return ipadd
@@ -54,7 +54,7 @@ Class Client
         Return AES_Decrypt(str, aes)
     End Function
 
-    Sub New(a1 As String, a2 As IPEndPoint, a3 As String, a4 As String, AESKEY As String)
+    Sub New(a1 As String, a2 As IPEndPoint, a3 As String, a4 As String, AESKEY As Byte())
         ipadd = a1
         ep = a2
         nname = a3

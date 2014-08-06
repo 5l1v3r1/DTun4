@@ -133,7 +133,7 @@ Partial Class MainWindow
             If state1 = 0 Then
                 Label5.Content = "Downloading public RSA key..."
             ElseIf state1 = 1 Then
-                Label5.Content = "Received IP and public key"
+                Label5.Content = "Generating AES key..."
             ElseIf state1 = 2 Then
                 Label5.Content = "Generated AES key"
             ElseIf state1 = 3 Then

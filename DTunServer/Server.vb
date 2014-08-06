@@ -50,7 +50,7 @@ Module Server
                             newip = response(3)
                         End If
 
-                        networks(response(2)).Add(New Client(newip, source, response(1), response(2), System.Text.Encoding.Default.GetString(rsa.Decrypt(System.Text.Encoding.Default.GetBytes(response(4)), True))))
+                        networks(response(2)).Add(New Client(newip, source, response(1), response(2), rsa.Decrypt(System.Text.Encoding.Default.GetBytes(response(4)), True)))
                         Dim mess As String = "HELO*" & newip & "*"
                         For k As Integer = 0 To networks(response(2)).Count - 1
                             mess &= networks(response(2))(k).Name & ":" & networks(response(2))(k).IP & "^"
@@ -151,18 +151,13 @@ Module Server
         Next
     End Sub
 
-    Public Function AES_Decrypt(ByVal in1 As Byte(), ByVal pass As String) As Byte()
+    Public Function AES_Decrypt(ByVal in1 As Byte(), ByVal pass As Byte()) As Byte()
         Dim input As String = Convert.ToBase64String(in1)
 
         Dim AES As New System.Security.Cryptography.RijndaelManaged
-        Dim Hash_AES As New System.Security.Cryptography.MD5CryptoServiceProvider
         Dim decrypted As String = ""
         Try
-            Dim hash(31) As Byte
-            Dim temp As Byte() = Hash_AES.ComputeHash(System.Text.ASCIIEncoding.ASCII.GetBytes(pass))
-            Array.Copy(temp, 0, hash, 0, 16)
-            Array.Copy(temp, 0, hash, 15, 16)
-            AES.Key = hash
+            AES.Key = pass
             AES.Mode = CipherMode.ECB
             Dim DESDecrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateDecryptor
             Dim Buffer As Byte() = Convert.FromBase64String(input)
@@ -172,19 +167,14 @@ Module Server
             Return {0}
         End Try
     End Function
-    Public Function AES_Encrypt(ByVal in1 As Byte(), ByVal pass As String) As Byte()
+    Public Function AES_Encrypt(ByVal in1 As Byte(), ByVal pass As Byte()) As Byte()
         Dim input As String = Convert.ToBase64String(in1)
 
 
         Dim AES As New System.Security.Cryptography.RijndaelManaged
-        Dim Hash_AES As New System.Security.Cryptography.MD5CryptoServiceProvider
         Dim encrypted As String = ""
         Try
-            Dim hash(31) As Byte
-            Dim temp As Byte() = Hash_AES.ComputeHash(System.Text.ASCIIEncoding.ASCII.GetBytes(pass))
-            Array.Copy(temp, 0, hash, 0, 16)
-            Array.Copy(temp, 0, hash, 15, 16)
-            AES.Key = hash
+            AES.Key = pass
             AES.Mode = CipherMode.ECB
             Dim DESEncrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateEncryptor
             Dim Buffer As Byte() = System.Text.ASCIIEncoding.ASCII.GetBytes(input)
