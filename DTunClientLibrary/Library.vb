@@ -5,6 +5,7 @@ Imports System.Net
 Imports System.Text
 Imports PacketDotNet
 Imports System.Security.Cryptography
+Imports DTun4.STUN_Client
 
 
 Public Class Library
@@ -69,7 +70,7 @@ Public Class Library
             Catch
                 Try
                     serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.me/data/rsapubkey.txt"))
-            Catch
+                Catch
                     state = 7
                     MsgBox("Can't download server public RSA key.")
                     Exit Sub
@@ -99,9 +100,8 @@ Public Class Library
         Else
             log1.WriteLine("Generated AES key")
         End If
-        
+
         log1.Flush()
-        state = 2
         Threading.Thread.Sleep(200)
 
         If staticip Then
@@ -113,13 +113,42 @@ Public Class Library
             IP = "DONOTWANT"
         End If
 
-        log1.WriteLine("Connecting to DTun4 Server")
-        state = 3
-        Threading.Thread.Sleep(150)
+
+        state = 2
+        log1.WriteLine("STUN experiment")
 
         groupEP = New IPEndPoint(IPAddress.Parse(remote), 4955)
         source = groupEP
-        listener.Send(Encoding.Default.GetBytes(String.Format("HELO*{0}*{1}*{2}*{3}", cname, nname, IP, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(aespass, True)))), Encoding.Default.GetByteCount(String.Format("HELO*{0}*{1}*{2}*{3}", cname, nname, IP, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(aespass, True)))), groupEP)
+
+        Dim dstun As New UdpClient()
+        dstun.Client.ReceiveTimeout = 3000
+        dstun.Client.SendTimeout = 3000
+        Dim stuninfo As String
+        Try
+            'Dim result1 As STUN_Result = STUN_Client.Query("stun.stunprotocol.org", 3478, socket)
+            'stuninfo = result1.NetType.ToString
+            'If result1.NetType <> STUN_NetType.UdpBlocked Then
+            '    stuninfo = stuninfo & " - " & result1.PublicEndPoint.ToString
+            'End If
+            dstun.Send(Encoding.Default.GetBytes("DSTUN1"), Encoding.Default.GetByteCount("DSTUN1"), groupEP)
+            Dim res As Byte() = dstun.Receive(source)
+            dstun.Send(res, res.Length, groupEP)
+            source = New IPEndPoint(IPAddress.Any, 0)
+            Dim res1 As String = Encoding.Default.GetString(dstun.Receive(source))
+            If res1 = "DSTUNOK" Then
+                stuninfo = "Full Cone/Open Internet"
+            Else
+                stuninfo = "Restricted Cone"
+            End If
+        Catch
+            stuninfo = "Restricted Cone"
+        End Try
+
+        state = 3
+        log1.WriteLine("Connecting to DTun4 Server")
+
+        Dim hellostring As String = String.Format("HELO*{0}*{1}*{2}*{3}*{4}", cname, nname, IP, stuninfo, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(aespass, True)))
+        listener.Send(Encoding.Default.GetBytes(hellostring), Encoding.Default.GetByteCount(hellostring), groupEP)
 
         Dim response() As String = Encoding.Default.GetString(listener.Receive(source)).Split({"*"c}, 3)
         IP = response(1)
@@ -128,7 +157,7 @@ Public Class Library
 
         updateusers = True
         Shell("netsh interface ip set address name=DTun4 source=static addr=" & response(1) & " mask=255.0.0.0 gateway=none", AppWinStyle.Hide, True, -1)
-        
+
 
         thr = New Threading.Thread(AddressOf ReceivePacket)
         thr.IsBackground = True
@@ -144,7 +173,7 @@ Public Class Library
         Dim chdev As Integer = -1
 
         'Dim log As String = ""
-        
+
 
         Dim i As Integer = -1
         For Each dev As ICaptureDevice In devices

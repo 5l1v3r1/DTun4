@@ -5,6 +5,7 @@ Imports System.Security.Cryptography
 
 Module Server
     Dim listener As UdpClient = New UdpClient(4955)
+    Dim dstun As New UdpClient
     Dim groupEP As IPEndPoint
     Dim source As IPEndPoint
     Dim clients As New List(Of IPEndPoint)
@@ -24,6 +25,7 @@ Module Server
         timer.Enabled = True
 
         log.WriteLine("Server started successfully")
+        log.Flush()
         While True
             Try
                 Try
@@ -31,10 +33,23 @@ Module Server
                     Dim packet As Byte() = listener.Receive(source)
                     If Not clients.Contains(source) Then
 
-                        Dim response As String() = Encoding.Default.GetString(packet).Split({"*"c}, 5)
-                        If Not response.GetUpperBound(0) = 4 Then
+                        ''DSTUN
+                        'Dim pack1 As String = Encoding.Default.GetString(packet)
+                        'If pack1.StartsWith("DSTUN") Then
+                        '    If pack1 = "DSTUN1" Then
+                        '        listener.Send(Encoding.Default.GetBytes("DSTUN2"), Encoding.Default.GetByteCount("DSTUN2"), source)
+                        '    ElseIf pack1 = "DSTUN2" Then
+                        '        dstun.Send(Encoding.Default.GetBytes("DSTUNOK"), Encoding.Default.GetByteCount("DSTUNOK"), source)
+                        '    End If
+                        '    Continue While
+                        'End If
+                        ''DSTUN
+
+                        Dim response As String() = Encoding.Default.GetString(packet).Split({"*"c}, 6)
+                        If Not response.GetUpperBound(0) = 5 Then
+                            log.WriteLine("Old version client")
+                            log.Flush()
                             listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), source)
-                            log.WriteLine("RECONNPLS Request sent to: " & source.Address.ToString)
                             Continue While
                         End If
 
@@ -50,22 +65,22 @@ Module Server
                             newip = response(3)
                         End If
 
-                        networks(response(2)).Add(New Client(newip, source, response(1), response(2), rsa.Decrypt(System.Text.Encoding.Default.GetBytes(response(4)), True)))
+                        networks(response(2)).Add(New Client(newip, source, response(1), response(2), rsa.Decrypt(System.Text.Encoding.Default.GetBytes(response(5)), True)))
                         Dim mess As String = "HELO*" & newip & "*"
                         For k As Integer = 0 To networks(response(2)).Count - 1
                             mess &= networks(response(2))(k).Name & ":" & networks(response(2))(k).IP & "^"
                         Next
-                        ' mess &= "*" & rsa.ToXmlString(False)
-                        listener.Send(Encoding.Default.GetBytes(mess), Encoding.Default.GetByteCount(mess), source)
 
-                        log.WriteLine("Added client from: " & source.Address.ToString & ":" & source.Port.ToString & " - " & response(1))
+                        listener.Send(Encoding.Default.GetBytes(mess), Encoding.Default.GetByteCount(mess), source)
+                        log.WriteLine("Added client from: " & source.Address.ToString & ":" & source.Port.ToString & " - " & response(1) & " STUN test: " & response(4))
+                        log.Flush()
+
                         Continue While
                     End If
                     Dim net As String = FindNetwork(source)
 
                     If (Encoding.Default.GetString(packet) = "INFOPLS") Then
                         If net = "none" Then
-                            log.WriteLine("Old version client probably")
                             listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), source)
                         Else
                             Dim mess As String = "KFINE"
@@ -92,14 +107,15 @@ Module Server
                             End Try
                         End If
                     Next
-                    log.Flush()
                     Console.Write("#")
                 Catch ex As System.Net.Sockets.SocketException
                     log.WriteLine("Ex: " & ex.ToString)
+                    log.Flush()
                 End Try
 
             Catch ex As Exception
                 log.WriteLine("Ex: " & ex.ToString)
+                log.Flush()
             End Try
 
         End While

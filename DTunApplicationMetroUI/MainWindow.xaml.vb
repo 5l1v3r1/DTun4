@@ -135,7 +135,7 @@ Partial Class MainWindow
             ElseIf state1 = 1 Then
                 Label5.Content = "Generating AES key..."
             ElseIf state1 = 2 Then
-                Label5.Content = "Generated AES key"
+                Label5.Content = "Conducting DSTUN experiment"
             ElseIf state1 = 3 Then
                 Label5.Content = "Connecting to DTun4 Server"
             ElseIf state1 = 4 Then
