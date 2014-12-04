@@ -20,7 +20,7 @@ Module Main
         Dim localIPs As IPAddress() = Dns.GetHostAddresses(Dns.GetHostName())
 
         For k As Integer = 0 To localIPs.GetUpperBound(0)
-            If localIPs(k).ToString.StartsWith("31.") Then
+            If localIPs(k).ToString.StartsWith("32.") Then
                 IP = localIPs(k).ToString
             End If
         Next
@@ -137,7 +137,7 @@ Module Main
         Console.Write("IP packet: ")
         If ip1.Version = IpVersion.IPv4 Then
 
-            If Not ip1.DestinationAddress.Equals(IPAddress.Parse(IP)) And Not ip1.DestinationAddress.Equals(IPAddress.Parse("31.255.255.255")) And ip1.SourceAddress.Equals(IPAddress.Parse(IP)) Then
+            If Not ip1.DestinationAddress.Equals(IPAddress.Parse(IP)) And Not ip1.DestinationAddress.Equals(IPAddress.Parse("32.255.255.255")) And ip1.SourceAddress.Equals(IPAddress.Parse(IP)) Then
                 Dim groupEP As New IPEndPoint(IPAddress.Parse("188.116.56.69"), 4955)
                 listener.Send(Packet, Packet.Count(), groupEP)
                 Console.WriteLine("Sent to {0}", IPAddress.Parse(ip1.DestinationAddress.Address))

@@ -11,7 +11,7 @@ Public Class ClientListBox
     Public Sub New(text_ As String, ping_ As String, status As Integer)
         Name = text_
         Ping = ping_
-
+        _leader = False
         If status = 0 Then
             _icon = toIcon(My.Resources._0)
             Color = "Red"
@@ -67,6 +67,19 @@ Public Class ClientListBox
 
     End Property
     Private _icon As System.Windows.Media.ImageSource
+    Private _leader As Boolean
+    Property Leader() As String
+        Get
+            If _leader Then
+                Return "L"
+            Else
+                Return ""
+            End If
+        End Get
+        Set(value As String)
+            _leader = value
+        End Set
+    End Property
     Function toIcon(bitmap As System.Drawing.Icon)
         Using memory As New MemoryStream()
             bitmap.Save(memory)

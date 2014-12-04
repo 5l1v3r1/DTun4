@@ -189,6 +189,7 @@ Partial Class MainWindow
                 End If
                 clc.Add(cl)
             Next
+            clc(0).Leader = True
             ListBox1.DataContext = clc
         Else
             Dim source As IPEndPoint = New IPEndPoint(IPAddress.Any, 4955)

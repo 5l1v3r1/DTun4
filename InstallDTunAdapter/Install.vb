@@ -113,7 +113,7 @@ Module Install
         Console.WriteLine()
 
 
-        Shell("netsh interface ip set address name=DTun4 source=static addr=31.0.0.10 mask=255.0.0.0 gateway=none", AppWinStyle.Hide, True, -1)
+        Shell("netsh interface ip set address name=DTun4 source=static addr=32.0.0.10 mask=255.0.0.0 gateway=none", AppWinStyle.Hide, True, -1)
         Console.WriteLine("Set initial config for interface")
 
         Console.WriteLine()

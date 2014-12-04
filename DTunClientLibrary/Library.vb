@@ -5,12 +5,20 @@ Imports System.Net
 Imports System.Text
 Imports PacketDotNet
 Imports System.Security.Cryptography
-Imports DTun4.STUN_Client
 
+Structure TableEntry
+    Dim key As String
+    Dim connected As Boolean
+    Sub New(key1 As String)
+        key = key1
+        connected = False
+    End Sub
+End Structure
 
 Public Class Library
     Dim device As ICaptureDevice
     Public listener As UdpClient = New UdpClient()
+    Public direct As UdpClient = New UdpClient()
     Public groupEP As IPEndPoint
     Dim source As New IPEndPoint(IPAddress.Any, 4955)
     Public IP As String
@@ -39,6 +47,13 @@ Public Class Library
     'Public Shared chatbutton As Windows.Forms.Button
     Public Shared chatbutton
 
+    Private leader As New IPEndPoint(IPAddress.Parse("0.0.0.0"), 1)
+    Private connected As Boolean = False
+    Private leading As Boolean = False
+    Private iptable As New Dictionary(Of IPEndPoint, TableEntry)
+
+    Private log As Boolean
+
     Dim thr As Threading.Thread
     Public Sub Main(c As Object())
         If Not log1 Is Nothing Then
@@ -53,6 +68,8 @@ Public Class Library
         Dim nname As String = c(1)
         Dim staticip As Boolean = c(2)
 
+        log = c(3)
+
         icon = c(4)
         ih = New IconHelper
 
@@ -62,7 +79,7 @@ Public Class Library
         Dim w As New MyWebClient
         w.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11")
         remote = Dns.GetHostEntry("apps.disahome.me").AddressList(0).ToString
-        If File.Exists("rsapubkey.txt") And c(3) Then
+        If File.Exists("rsapubkey.txt") And log Then
             serverrsa.FromXmlString(File.ReadAllText("rsapubkey.txt"))
         Else
             Try
@@ -93,7 +110,7 @@ Public Class Library
         aespass = k1.GetBytes(32)
         k1.Reset()
         k1.Dispose()
-        If c(3) = True Then
+        If log Then
             log1.WriteLine("Generated AES key - DEBUG - " & BitConverter.ToString(aespass).Replace("-", String.Empty))
             log1.WriteLine("AES test: string = test = " & BitConverter.ToString(AES_Encrypt(Encoding.Default.GetBytes("test"))).Replace("-", String.Empty))
             log1.WriteLine("AES test: string = " & BitConverter.ToString(AES_Decrypt(AES_Encrypt(Encoding.Default.GetBytes("test")))).Replace("-", String.Empty))
@@ -106,7 +123,11 @@ Public Class Library
 
         If staticip Then
             IP = getIP()
-            If IP = "31.0.0.10" Then
+            If IP = "0.0.0.0" Then
+                staticip = False
+                IP = "DONOTWANT"
+            End If
+            If IP = "32.0.0.10" Then
                 IP = "DONOTWANT"
             End If
         Else
@@ -115,39 +136,16 @@ Public Class Library
 
 
         state = 2
-        log1.WriteLine("STUN experiment")
+        log1.WriteLine("Preparing...")
 
         groupEP = New IPEndPoint(IPAddress.Parse(remote), 4955)
         source = groupEP
 
-        Dim dstun As New UdpClient()
-        dstun.Client.ReceiveTimeout = 3000
-        dstun.Client.SendTimeout = 3000
-        Dim stuninfo As String
-        Try
-            'Dim result1 As STUN_Result = STUN_Client.Query("stun.stunprotocol.org", 3478, socket)
-            'stuninfo = result1.NetType.ToString
-            'If result1.NetType <> STUN_NetType.UdpBlocked Then
-            '    stuninfo = stuninfo & " - " & result1.PublicEndPoint.ToString
-            'End If
-            dstun.Send(Encoding.Default.GetBytes("DSTUN1"), Encoding.Default.GetByteCount("DSTUN1"), groupEP)
-            Dim res As Byte() = dstun.Receive(source)
-            dstun.Send(res, res.Length, groupEP)
-            source = New IPEndPoint(IPAddress.Any, 0)
-            Dim res1 As String = Encoding.Default.GetString(dstun.Receive(source))
-            If res1 = "DSTUNOK" Then
-                stuninfo = "Full Cone/Open Internet"
-            Else
-                stuninfo = "Restricted Cone"
-            End If
-        Catch
-            stuninfo = "Restricted Cone"
-        End Try
 
         state = 3
         log1.WriteLine("Connecting to DTun4 Server")
 
-        Dim hellostring As String = String.Format("HELO*{0}*{1}*{2}*{3}*{4}", cname, nname, IP, stuninfo, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(aespass, True)))
+        Dim hellostring As String = String.Format("HELO*{0}*{1}*{2}*{3}", cname, nname, IP, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(aespass, True)))
         listener.Send(Encoding.Default.GetBytes(hellostring), Encoding.Default.GetByteCount(hellostring), groupEP)
 
         Dim response() As String = Encoding.Default.GetString(listener.Receive(source)).Split({"*"c}, 3)
@@ -216,10 +214,11 @@ Public Class Library
     Public Shared Function getIP()
         Dim strHostName As String = System.Net.Dns.GetHostName()
         For i As Integer = 0 To System.Net.Dns.GetHostByName(strHostName).AddressList.Count - 1
-            If System.Net.Dns.GetHostByName(strHostName).AddressList(i).ToString().StartsWith("31.") Then
+            If System.Net.Dns.GetHostByName(strHostName).AddressList(i).ToString().StartsWith("32.") Then
                 Return System.Net.Dns.GetHostByName(strHostName).AddressList(i).ToString()
             End If
         Next
+        Return "0.0.0.0"
     End Function
     Public Sub SDTun()
         Try
@@ -235,8 +234,15 @@ Public Class Library
     Private Sub HandlePacket(sender As Object, e As CaptureEventArgs)
         ih.U()
         Dim packet As Byte() = e.Packet.Data
-        log1.Write("Captured packet: ")
-        Dim pack As Packet = PacketDotNet.Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data)
+        If log Then
+            log1.Write("Captured packet: ")
+        End If
+        Dim pack As Packet
+        Try
+            pack = PacketDotNet.Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data)
+        Catch
+            Exit Sub
+        End Try
         Dim ip1 As IpPacket = IpPacket.GetEncapsulated(pack)
         Dim arp As ARPPacket = ARPPacket.GetEncapsulated(pack)
 
@@ -247,16 +253,21 @@ Public Class Library
         End If
 
         If (ip1 Is Nothing) And (arp Is Nothing) Then
-            log1.WriteLine("nonIP nor arp packet")
+            If log Then
+                log1.WriteLine("-")
+            End If
             Exit Sub
         End If
 
-        log1.Flush()
+        If log Then
+            log1.Flush()
+        End If
+
 
     End Sub
 
     Public Sub SendMessage(mes As String)
-        chatsender.Send(System.Text.Encoding.Default.GetBytes("CHAT" & mes), System.Text.Encoding.Default.GetByteCount("CHAT" & mes), New IPEndPoint(IPAddress.Parse("31.255.255.255"), 4956))
+        chatsender.Send(System.Text.Encoding.Default.GetBytes("CHAT" & mes), System.Text.Encoding.Default.GetByteCount("CHAT" & mes), New IPEndPoint(IPAddress.Parse("32.255.255.255"), 4956))
         chatlines.Add("You: " & mes)
     End Sub
     Public Sub SendControlMessageReq(ip As String)
@@ -279,21 +290,68 @@ Public Class Library
                 Dim packet As Byte() = listener.Receive(source)
 
                 Dim message As String = Encoding.Default.GetString(packet)
-                If (message.StartsWith("KFINE")) Then
-                    users = Encoding.Default.GetString(packet).Substring(5).Split("^")
-                    If Not DirectCast(oldusers, IStructuralEquatable).Equals(users, StructuralComparisons.StructuralEqualityComparer) Then
-                        oldusers = users
-                        updateusers = True
-                    End If
-                    Continue While
-                End If
-                If (Encoding.Default.GetString(packet).StartsWith("RECONNPLS")) Then
+                If (message.StartsWith("RECONNPLS")) Then
                     conn = False
                     thr.Abort()
                     device.StopCapture()
                     Exit Sub
                 End If
-                packet = AES_Decrypt(packet)
+
+                If iptable.ContainsKey(source) Then
+                    packet = AES_Decrypt(packet, iptable(source).key)
+                Else
+                    packet = AES_Decrypt(packet)
+                End If
+
+                message = Encoding.Default.GetString(packet)
+
+                If (message.StartsWith("KFINE")) Then
+                    Dim conf As String() = message.Split("*")
+                    Dim newl As New IPEndPoint(IPAddress.Parse(conf(1).Split(":")(0)), conf(1).Split(":")(1))
+                    If newl.Address.ToString <> leader.Address.ToString Or newl.Port <> leader.Port Then
+                        If newl.Address.ToString = "1.1.1.1" Then
+                            leading = True
+                            connected = False
+                            iptable.Clear()
+                            log1.WriteLine("###You became a leader###")
+                        ElseIf newl.Address.ToString <> "0.0.0.0" Then
+                            leader = newl
+                            leading = False
+                            connected = True
+                            log1.WriteLine("###New leader: {0}###", leader.ToString)
+                            'connected = False
+                            listener.Send(AES_Encrypt(Encoding.Default.GetBytes("heeello")), AES_Encrypt(Encoding.Default.GetBytes("heeello")).Count(), leader)
+                            listener.Send(AES_Encrypt(Encoding.Default.GetBytes("heeello")), AES_Encrypt(Encoding.Default.GetBytes("heeello")).Count(), leader)
+                        Else
+                            connected = False
+                            leading = False
+                        End If
+                        leader = newl
+                    End If
+
+
+                    users = conf(0).Substring(5).Split("^")
+                    If Not DirectCast(oldusers, IStructuralEquatable).Equals(users, StructuralComparisons.StructuralEqualityComparer) Then
+                        oldusers = users
+                        updateusers = True
+                    End If
+
+
+                    If leading Then
+                        Dim leaddata As String() = conf(2).Split("^")
+                        For i As Integer = 0 To leaddata.Count - 1
+                            Dim ip As String() = leaddata(i).Split("|")(0).Split(":")
+                            Dim endp As IPEndPoint = New IPEndPoint(IPAddress.Parse(ip(0)), ip(1))
+                            'If Not iptable.ContainsKey(endp) Then
+                            iptable(endp) = New TableEntry(leaddata(i).Split("|")(1))
+                            'End If
+                        Next
+                    End If
+
+
+                    Continue While
+                End If
+
 
 
 
@@ -303,21 +361,40 @@ Public Class Library
 
                 ih.R()
 
-                Dim pack As Packet = PacketDotNet.Packet.ParsePacket(LinkLayers.Ethernet, packet)
-                Dim ip1 As IpPacket = IpPacket.GetEncapsulated(pack)
-                Dim arp As ARPPacket = ARPPacket.GetEncapsulated(pack)
-
+                Dim pack As Packet
+                Dim ip1 As IpPacket
+                Dim arp As ARPPacket
+                Try
+                    pack = PacketDotNet.Packet.ParsePacket(LinkLayers.Ethernet, packet)
+                    ip1 = IpPacket.GetEncapsulated(pack)
+                    arp = ARPPacket.GetEncapsulated(pack)
+                Catch
+                    Continue While
+                End Try
 
 
                 If (Not ip1 Is Nothing) Then
-                    'If ip1.DestinationAddress.Equals(IPAddress.Parse(IP)) Then
 
-                    message = Encoding.Default.GetString(packet)
+                    If leading Then
+                        For i As Integer = 0 To iptable.Count() - 1
+                            Try
+                                'If iptable.ElementAt(i).Value.connected Then
+                                If iptable.ElementAt(i).Key.ToString <> source.ToString Then
+                                    packet = AES_Encrypt(packet, iptable.ElementAt(i).Value.key)
+                                    listener.Send(packet, packet.Count(), iptable.ElementAt(i).Key)
+                                End If
+                                'Else
+                                '    listener.Send()
+                                'End If
+                            Catch
+                            End Try
+                        Next
+                    End If
+
                     If message.Contains("CHAT") Then
                         chatlines.Add(ip1.SourceAddress.ToString & ":" & message.Substring(message.IndexOf("C")).Replace("CHAT", ""))
                         log1.WriteLine("Created chat message from {0}", ip1.SourceAddress.ToString)
-                        'chatbutton.Text = "Chat (!)"
-                        chatbutton.Content = "Chat (!)" 'WPF FIX
+                        chatbutton.Content = "Chat (!)"
                         Continue While
                     End If
                     If message.Contains("DTun4CM-REQ") Then
@@ -329,12 +406,33 @@ Public Class Library
                     End If
 
                     device.SendPacket(packet)
-                    log1.WriteLine("Created IP packet from {0}", ip1.SourceAddress.ToString)
+                    If log Then
+                        log1.WriteLine("*IP from {0}", ip1.SourceAddress.ToString)
+                    End If
                 End If
 
                 If (Not arp Is Nothing) Then
+
+                    If leading Then
+                        For i As Integer = 0 To iptable.Count() - 1
+                            Try
+                                'If iptable.ElementAt(i).Value.connected Then
+                                If iptable.ElementAt(i).Key.ToString <> source.ToString Then
+                                    packet = AES_Encrypt(packet, iptable.ElementAt(i).Value.key)
+                                    listener.Send(packet, packet.Count(), iptable.ElementAt(i).Key)
+                                End If
+                                'Else
+                                '    listener.Send()
+                                'End If
+                            Catch
+                            End Try
+                        Next
+                    End If
+
                     device.SendPacket(packet)
-                    log1.WriteLine("Created ARP packet from {0}", arp.SenderProtocolAddress.ToString)
+                    If log Then
+                        log1.WriteLine("*ARP from {0}", arp.SenderProtocolAddress.ToString)
+                    End If
                 End If
 
                 log1.Flush()
@@ -345,37 +443,118 @@ Public Class Library
 
     Private Sub ParseTCPIP(pack As Packet, Packet As Byte())
         Dim ip1 As IpPacket = IpPacket.GetEncapsulated(pack)
-        log1.Write("IP packet: ")
+        If log Then
+            log1.Write("IP: ")
+        End If
         If ip1.Version = IpVersion.IPv4 Then
             If ip1.SourceAddress.Equals(IPAddress.Parse(IP)) Then
-                Dim groupEP As New IPEndPoint(IPAddress.Parse(remote), 4955)
-                Packet = AES_Encrypt(Packet)
-                listener.Send(Packet, Packet.Count(), groupEP)
-                log1.WriteLine("Sent to {0}", ip1.DestinationAddress.ToString)
+                If connected Then
+                    Try
+                        Packet = AES_Encrypt(Packet)
+                        listener.Send(Packet, Packet.Count(), leader)
+                    Catch
+                    End Try
+                ElseIf Not leading Then
+                    Packet = AES_Encrypt(Packet)
+                    Dim groupEP As New IPEndPoint(IPAddress.Parse(remote), 4955)
+                    listener.Send(Packet, Packet.Count(), groupEP)
+                Else
+                    For i As Integer = 0 To iptable.Count() - 1
+                        Try
+                            'If iptable.ElementAt(i).Value.connected Then
+                            Packet = AES_Encrypt(Packet, iptable.ElementAt(i).Value.key)
+                            listener.Send(Packet, Packet.Count(), iptable.ElementAt(i).Key)
+                            'Else
+                            '    listener.Send()
+                            'End If
+                        Catch
+                        End Try
+                    Next
+                End If
+                If log Then
+                    log1.WriteLine("Sent to {0}", ip1.DestinationAddress.ToString)
+                End If
             Else
-                log1.WriteLine("Local packet from {0}. Skipped", ip1.SourceAddress.ToString)
-            End If
+                If log Then
+                    log1.WriteLine("Local packet from {0}. Skipped", ip1.SourceAddress.ToString)
+                End If
+                End If
         Else
-            log1.WriteLine("v6Packet")
+            If log Then
+                log1.WriteLine("-")
+            End If
         End If
 
     End Sub
 
     Private Sub ParseARP(pack As Packet, Packet As Byte())
         Dim arp As ARPPacket = ARPPacket.GetEncapsulated(pack)
-        log1.Write("ARP packet: ")
+        If log Then
+            log1.Write("ARP: ")
+        End If
         If arp.SenderProtocolAddress.ToString = IP Then
-            Dim groupEP As New IPEndPoint(IPAddress.Parse(remote), 4955)
-            listener.Send(AES_Encrypt(Packet), AES_Encrypt(Packet).Count(), groupEP)
-            log1.WriteLine("Sent to {0}", arp.TargetProtocolAddress.ToString)
+            If connected Then
+                Try
+                    Packet = AES_Encrypt(Packet)
+                    listener.Send(Packet, Packet.Count(), leader)
+                Catch
+                End Try
+            ElseIf Not leading Then
+                Packet = AES_Encrypt(Packet)
+                Dim groupEP As New IPEndPoint(IPAddress.Parse(remote), 4955)
+                listener.Send(Packet, Packet.Count(), groupEP)
+            Else
+                For i As Integer = 0 To iptable.Count() - 1
+                    Try
+                        'If iptable.ElementAt(i).Value.connected Then
+                        Packet = AES_Encrypt(Packet, iptable.ElementAt(i).Value.key)
+                        listener.Send(Packet, Packet.Count(), iptable.ElementAt(i).Key)
+                        'Else
+                        '    listener.Send()
+                        'End If
+                    Catch
+                    End Try
+                Next
+            End If
+            If log Then
+                log1.WriteLine("Sent to {0}", arp.TargetProtocolAddress.ToString)
+            End If
         Else
-            log1.WriteLine("Local packet. Skipped")
+            If log Then
+                log1.WriteLine("Local packet. Skipped")
+            End If
         End If
     End Sub
 
 
 
-    Private Function AES_Decrypt(ByVal in1 As Byte()) As Byte()
+
+
+
+
+    Private Overloads Function AES_Decrypt(ByVal in1 As Byte(), ByVal pass As String) As Byte()
+        Dim AES As New System.Security.Cryptography.AesManaged
+        Try
+            AES.Key = Encoding.Default.GetBytes(pass)
+            AES.Mode = CipherMode.ECB
+            Dim AESDecrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateDecryptor
+            Return AESDecrypter.TransformFinalBlock(in1, 0, in1.Length)
+        Catch ex As Exception
+            Return {0}
+        End Try
+    End Function
+    Private Overloads Function AES_Encrypt(ByVal in1 As Byte(), ByVal pass As String) As Byte()
+        Dim AES As New System.Security.Cryptography.AesManaged
+        Try
+            AES.Key = Encoding.Default.GetBytes(pass)
+            AES.Mode = CipherMode.ECB
+            Dim AESEncrypter As System.Security.Cryptography.ICryptoTransform = AES.CreateEncryptor
+            Return AESEncrypter.TransformFinalBlock(in1, 0, in1.Length)
+        Catch ex As Exception
+            Return {0}
+        End Try
+    End Function
+    Private Overloads Function AES_Decrypt(ByVal in1 As Byte()) As Byte()
         Dim AES As New System.Security.Cryptography.AesManaged
         Try
             AES.Key = aespass
@@ -386,7 +565,7 @@ Public Class Library
             Return {0}
         End Try
     End Function
-    Private Function AES_Encrypt(ByVal in1 As Byte()) As Byte()
+    Private Overloads Function AES_Encrypt(ByVal in1 As Byte()) As Byte()
         Dim AES As New System.Security.Cryptography.AesManaged
         Try
             AES.Key = aespass

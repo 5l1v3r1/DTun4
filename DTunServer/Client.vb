@@ -7,6 +7,11 @@ Class Client
     Private net As String
     Private timeout As Integer
     Private aes() As Byte
+    ReadOnly Property Key As String
+        Get
+            Return System.Text.Encoding.Default.GetString(aes)
+        End Get
+    End Property
     Property IP() As String
         Get
             Return ipadd
@@ -59,7 +64,7 @@ Class Client
         ep = a2
         nname = a3
         net = a4
-        timeout = 5
+        timeout = 15
         aes = AESKEY
     End Sub
 End Class

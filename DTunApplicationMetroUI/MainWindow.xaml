@@ -44,6 +44,9 @@
                             <TextBlock Text="{Binding Ping}"
                                        Grid.Column="1" Grid.Row="1" HorizontalAlignment="right"
                                        Foreground="{Binding Color}"/>
+                            <TextBlock Text="{Binding Leader}"
+                                       Grid.Column="1" Grid.Row="1" HorizontalAlignment="right" 
+                                       Foreground="Blue" Margin="0,0,30,0" />
                         </Grid>
                     </Grid>
                 </DataTemplate>
