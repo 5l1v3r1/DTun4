@@ -38,6 +38,7 @@ Module Install
             Shell("tapinstall.exe remove tap4955", AppWinStyle.Hide, True, -1)
         End If
 
+        Threading.Thread.Sleep(1000)
         Console.WriteLine()
         Console.WriteLine("##############################")
         Console.WriteLine("Installing TAP device 2 of 5...")
@@ -50,7 +51,7 @@ Module Install
             Shell("tapinstall.exe install OemWin2k.inf tap4955", AppWinStyle.Hide, True, -1)
         End If
 
-
+        Threading.Thread.Sleep(1000)
         Console.WriteLine()
         Console.WriteLine("##############################")
         Console.WriteLine("Configuring DTun4 adapter 3 of 5...")
@@ -95,6 +96,8 @@ Module Install
         Dim name As String = Registry.LocalMachine.OpenSubKey(regpath, False).GetValue("Name")
         Console.WriteLine("Detected interface: " & name)
 
+
+        Threading.Thread.Sleep(2000)
         Console.WriteLine()
         Console.WriteLine("##############################")
         Console.WriteLine("Configuring DTun4 adapter 4 of 5...")
@@ -106,6 +109,7 @@ Module Install
         Shell("netsh interface set interface name=" & Chr(34) & name & Chr(34) & " newname=DTun4", AppWinStyle.Hide, True, -1)
         Console.WriteLine("Renamed " & name & " to DTun4")
 
+        Threading.Thread.Sleep(2000)
         Console.WriteLine()
         Console.WriteLine("##############################")
         Console.WriteLine("Configuring DTun4 adapter 5 of 5...")
@@ -116,6 +120,7 @@ Module Install
         Shell("netsh interface ip set address name=DTun4 source=static addr=32.0.0.10 mask=255.0.0.0 gateway=none", AppWinStyle.Hide, True, -1)
         Console.WriteLine("Set initial config for interface")
 
+        Threading.Thread.Sleep(1000)
         Console.WriteLine()
         Console.WriteLine("##############################")
         Console.WriteLine("Device installed")

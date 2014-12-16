@@ -253,6 +253,7 @@ Public Class Library
         End If
 
         If (ip1 Is Nothing) And (arp Is Nothing) Then
+
             If log Then
                 log1.WriteLine("-")
             End If
@@ -339,12 +340,16 @@ Public Class Library
 
                     If leading Then
                         Dim leaddata As String() = conf(2).Split("^")
+                        iptable.Clear()
                         For i As Integer = 0 To leaddata.Count - 1
                             Dim ip As String() = leaddata(i).Split("|")(0).Split(":")
-                            Dim endp As IPEndPoint = New IPEndPoint(IPAddress.Parse(ip(0)), ip(1))
-                            'If Not iptable.ContainsKey(endp) Then
-                            iptable(endp) = New TableEntry(leaddata(i).Split("|")(1))
-                            'End If
+                            Try
+                                Dim endp As IPEndPoint = New IPEndPoint(IPAddress.Parse(ip(0)), ip(1))
+                                'If Not iptable.ContainsKey(endp) Then
+                                iptable(endp) = New TableEntry(leaddata(i).Split("|")(1))
+                                'End If
+                            Catch
+                            End Try
                         Next
                     End If
 
@@ -374,19 +379,19 @@ Public Class Library
 
 
                 If (Not ip1 Is Nothing) Then
-
+                    device.SendPacket(packet)
                     If leading Then
                         For i As Integer = 0 To iptable.Count() - 1
                             Try
                                 'If iptable.ElementAt(i).Value.connected Then
                                 If iptable.ElementAt(i).Key.ToString <> source.ToString Then
-                                    packet = AES_Encrypt(packet, iptable.ElementAt(i).Value.key)
-                                    listener.Send(packet, packet.Count(), iptable.ElementAt(i).Key)
+                                    Dim packet1 = AES_Encrypt(packet, iptable.ElementAt(i).Value.key)
+                                    listener.Send(packet1, packet1.Count(), iptable.ElementAt(i).Key)
                                 End If
                                 'Else
                                 '    listener.Send()
                                 'End If
-                            Catch
+                            Catch e As Exception
                             End Try
                         Next
                     End If
@@ -405,31 +410,31 @@ Public Class Library
                         Continue While
                     End If
 
-                    device.SendPacket(packet)
+                    'device.SendPacket(packet)
                     If log Then
                         log1.WriteLine("*IP from {0}", ip1.SourceAddress.ToString)
                     End If
                 End If
 
                 If (Not arp Is Nothing) Then
-
+                    device.SendPacket(packet)
                     If leading Then
                         For i As Integer = 0 To iptable.Count() - 1
                             Try
                                 'If iptable.ElementAt(i).Value.connected Then
                                 If iptable.ElementAt(i).Key.ToString <> source.ToString Then
-                                    packet = AES_Encrypt(packet, iptable.ElementAt(i).Value.key)
-                                    listener.Send(packet, packet.Count(), iptable.ElementAt(i).Key)
+                                    Dim packet1 = AES_Encrypt(packet, iptable.ElementAt(i).Value.key)
+                                    listener.Send(packet1, packet1.Count(), iptable.ElementAt(i).Key)
                                 End If
                                 'Else
                                 '    listener.Send()
                                 'End If
-                            Catch
+                            Catch e As Exception
                             End Try
                         Next
                     End If
 
-                    device.SendPacket(packet)
+                    '
                     If log Then
                         log1.WriteLine("*ARP from {0}", arp.SenderProtocolAddress.ToString)
                     End If
@@ -462,12 +467,12 @@ Public Class Library
                     For i As Integer = 0 To iptable.Count() - 1
                         Try
                             'If iptable.ElementAt(i).Value.connected Then
-                            Packet = AES_Encrypt(Packet, iptable.ElementAt(i).Value.key)
-                            listener.Send(Packet, Packet.Count(), iptable.ElementAt(i).Key)
+                            Dim Packet1 = AES_Encrypt(Packet, iptable.ElementAt(i).Value.key)
+                            listener.Send(Packet1, Packet1.Count(), iptable.ElementAt(i).Key)
                             'Else
                             '    listener.Send()
                             'End If
-                        Catch
+                        Catch e As Exception
                         End Try
                     Next
                 End If
@@ -507,12 +512,12 @@ Public Class Library
                 For i As Integer = 0 To iptable.Count() - 1
                     Try
                         'If iptable.ElementAt(i).Value.connected Then
-                        Packet = AES_Encrypt(Packet, iptable.ElementAt(i).Value.key)
-                        listener.Send(Packet, Packet.Count(), iptable.ElementAt(i).Key)
+                        Dim Packet1 = AES_Encrypt(Packet, iptable.ElementAt(i).Value.key)
+                        listener.Send(Packet1, Packet1.Count(), iptable.ElementAt(i).Key)
                         'Else
                         '    listener.Send()
                         'End If
-                    Catch
+                    Catch e As Exception
                     End Try
                 Next
             End If
