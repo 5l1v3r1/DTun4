@@ -5,6 +5,7 @@ Imports System.Net
 Imports System.Text
 Imports PacketDotNet
 Imports System.Security.Cryptography
+Imports System.Speech.Synthesis
 
 Structure TableEntry
     Dim key As String
@@ -55,6 +56,10 @@ Public Class Library
     Private log As Boolean
 
     Dim thr As Threading.Thread
+
+    Public speech As New SpeechSynthesizer()
+
+
     Public Sub Main(c As Object())
         If Not log1 Is Nothing Then
             log1.Close()
@@ -79,6 +84,7 @@ Public Class Library
         Dim w As New MyWebClient
         w.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11")
         remote = Dns.GetHostEntry("apps.disahome.me").AddressList(0).ToString
+#End If
         If File.Exists("rsapubkey.txt") And log Then
             serverrsa.FromXmlString(File.ReadAllText("rsapubkey.txt"))
         Else
@@ -96,7 +102,7 @@ Public Class Library
             End Try
         End If
         w.Dispose()
-#End If
+
         log1.WriteLine("Received IP and public key")
         state = 1
         Threading.Thread.Sleep(200)
@@ -399,6 +405,10 @@ Public Class Library
                     If message.Contains("CHAT") Then
                         chatlines.Add(ip1.SourceAddress.ToString & ":" & message.Substring(message.IndexOf("C")).Replace("CHAT", ""))
                         log1.WriteLine("Created chat message from {0}", ip1.SourceAddress.ToString)
+                        'My.Computer.Audio.PlaySystemSound(Media.SystemSounds.Hand)
+                        If message.Substring(message.IndexOf("C")).Replace("CHAT", "").Length > 3 And speech.Volume > 0 Then
+                            speech.SpeakAsync(message.Substring(message.IndexOf("C")).Replace("CHAT", ""))
+                        End If
                         chatbutton.Content = "Chat (!)"
                         Continue While
                     End If
@@ -483,7 +493,7 @@ Public Class Library
                 If log Then
                     log1.WriteLine("Local packet from {0}. Skipped", ip1.SourceAddress.ToString)
                 End If
-                End If
+            End If
         Else
             If log Then
                 log1.WriteLine("-")

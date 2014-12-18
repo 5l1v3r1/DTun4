@@ -166,6 +166,7 @@ Partial Class MainWindow
             Timer2.Enabled = True
             Timer1.Enabled = False
             Button2.IsEnabled = True
+            mutebutton.IsEnabled = True
         End If
     End Sub
     Private Sub Timer2_Tick(sender As Object, e As EventArgs)
@@ -395,6 +396,16 @@ Partial Class MainWindow
             restart = True
             Windows.Forms.Application.Restart()
             Application.Current.Shutdown()
+        End If
+    End Sub
+
+    Private Sub mutebutton_PreviewMouseDown(sender As Object, e As MouseButtonEventArgs) Handles mutebutton.PreviewMouseDown
+        If mutebutton.Content = "unmute" Then
+            mutebutton.Content = "mute"
+            lib1.speech.Volume = "100"
+        Else
+            mutebutton.Content = "unmute"
+            lib1.speech.Volume = "0"
         End If
     End Sub
 End Class
