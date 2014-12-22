@@ -61,7 +61,7 @@ Partial Class MainWindow
             'Await ShowMessageAsync("Error", "Start application using updater")
             Dim thr5 As New System.Threading.Thread(AddressOf error1)
             thr5.IsBackground = True
-            thr5.Start()
+            thr5.Start(0)
             'Environment.Exit(1)
             Exit Sub
         End If
@@ -93,20 +93,35 @@ Partial Class MainWindow
         menuitem2.Name = "Copy"
         menuitem2.Text = "Copy IP"
 
+        Dim menuitem3 As New Forms.ToolStripMenuItem
+        menuitem3.Name = "CS"
+        menuitem3.Text = "Request Client-Server model"
+
         client.Items.Add(menuitem)
         client.Items.Add(menuitem2)
+        client.Items.Add(menuitem3)
 
         AddHandler client.ItemClicked, AddressOf client_ItemClicked
         AddHandler client.Closed, AddressOf client_Closed
 
         ListBox1.AddHandler(UIElement.MouseDownEvent, New MouseButtonEventHandler(AddressOf ListBox1_MouseDown), True)
     End Sub
-    Sub error1()
+    Sub error1(ByVal type As Integer)
         Dim task As task
-        Application.Current.Dispatcher.Invoke(DispatcherPriority.Normal, (Sub() task = ShowMessageAsync("Error", "Start application using updater")))
+        Dim t As String
+        If type = 0 Then
+            t = "Start application using updater"
+        ElseIf type = 1 Then
+            t = "You cannot request Client-Server model when all clients are active"
+        ElseIf type = 2 Then
+            t = "You must be the leader to request Client-Server model for the network"
+        End If
+        Application.Current.Dispatcher.Invoke(DispatcherPriority.Normal, (Sub() task = ShowMessageAsync("Error", t)))
         'task.Start()
         task.Wait()
-        Environment.Exit(1)
+        If type = 0 Then
+            Environment.Exit(1)
+        End If
     End Sub
     Private Sub Timer1_Tick(sender As Object, e As EventArgs)
         If lib1.updateusers Then
@@ -190,7 +205,11 @@ Partial Class MainWindow
                 End If
                 clc.Add(cl)
             Next
-            clc(0).Leader = True
+            If lib1.leading Or lib1.connected Then
+                clc(0).Leader = True
+            Else
+                clc(0).Leader = False
+            End If
             ListBox1.DataContext = clc
         Else
             Dim source As IPEndPoint = New IPEndPoint(IPAddress.Any, 4955)
@@ -352,6 +371,27 @@ Partial Class MainWindow
     Private Sub client_ItemClicked(sender As Object, e As ToolStripItemClickedEventArgs)
         If e.ClickedItem.Text.StartsWith("ping") Then
             Microsoft.VisualBasic.Shell(e.ClickedItem.Text & " -t", AppWinStyle.NormalFocus, False)
+        ElseIf e.ClickedItem.Text.StartsWith("Req") Then
+            If lib1.leading Then
+                Dim y As Boolean = False
+                For i As Integer = 0 To status.Count() - 1
+                    If status.ElementAt(i).Value.status = 0 Then
+                        y = True
+                        Exit For
+                    End If
+                Next
+                If y Then
+                    lib1.SendCSReq()
+                Else
+                    Dim thr5 As New System.Threading.Thread(AddressOf error1)
+                    thr5.IsBackground = True
+                    thr5.Start(1)
+                End If
+            Else
+                Dim thr5 As New System.Threading.Thread(AddressOf error1)
+                thr5.IsBackground = True
+                thr5.Start(2)
+            End If
         Else
             Clipboard.SetText(menufor)
         End If
@@ -364,8 +404,8 @@ Partial Class MainWindow
         If Button1.Content = "Connect" Then
 
 
-            If TextBox1.Text.Contains("*") Or TextBox2.Text.Contains("*") Or TextBox1.Text.Contains("^") Or TextBox2.Text.Contains("^") Or TextBox1.Text.Contains(":") Or TextBox2.Text.Contains(":") Then
-                ShowMessageAsync("Error", "Names can contain neither *, ^ nor :")
+            If TextBox1.Text.Contains("*") Or TextBox2.Text.Contains("*") Or TextBox1.Text.Contains("^") Or TextBox2.Text.Contains("^") Or TextBox1.Text.Contains(":") Or TextBox2.Text.Contains(":") Or TextBox1.Text.Contains("|") Or TextBox2.Text.Contains("|") Then
+                ShowMessageAsync("Error", "Names cannot contain: '*', '^', ':', '|'")
                 Exit Sub
             End If
             lib1 = New Library

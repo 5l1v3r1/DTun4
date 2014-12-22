@@ -64,7 +64,7 @@ Class Client
         ep = a2
         nname = a3
         net = a4
-        timeout = 15
+        timeout = 30
         aes = AESKEY
     End Sub
 End Class
