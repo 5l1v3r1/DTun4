@@ -192,7 +192,13 @@ Partial Class MainWindow
             Windows.Forms.Application.Restart()
             Application.Current.Shutdown()
         End If
-
+        If state1 <> lib1.state Then
+            state1 = lib1.state
+            If state1 = 6 Then
+                ProgressBar1.Value = 100
+                Label5.Content = "Connected"
+            End If
+        End If
         If lib1.updateusers Then
             lib1.updateusers = False
             Dim clc As New ClientCollection
@@ -211,10 +217,9 @@ Partial Class MainWindow
                 clc(0).Leader = False
             End If
             ListBox1.DataContext = clc
-        Else
-            Dim source As IPEndPoint = New IPEndPoint(IPAddress.Any, 4955)
-            lib1.listener.Send(Encoding.Default.GetBytes("INFOPLS"), Encoding.Default.GetByteCount("INFOPLS"), lib1.groupEP)
         End If
+        Dim source As IPEndPoint = New IPEndPoint(IPAddress.Any, 4955)
+        lib1.listener.Send(Encoding.Default.GetBytes("INFOPLS"), Encoding.Default.GetByteCount("INFOPLS"), lib1.groupEP)
     End Sub
     Private Sub Timer3_Tick(sender As Object, e As EventArgs)
         If ProgressBar1.Value > 10 Then
@@ -232,6 +237,7 @@ Partial Class MainWindow
                 CheckBox1.IsChecked = True
                 ch = True
             End If
+            Button1.IsEnabled = True
             Button1_MouseDown(Nothing, Nothing)
             If ch Then
                 CheckBox1.IsChecked = False
@@ -411,13 +417,16 @@ Partial Class MainWindow
             lib1 = New Library
             Dim thr As New System.Threading.Thread(AddressOf lib1.Main)
             thr.IsBackground = True
-            Dim c(5) As Object
+            Dim c(6) As Object
             c(0) = TextBox2.Text
             c(1) = TextBox1.Text
             c(2) = CheckBox1.IsChecked
             c(3) = False
             c(4) = Me.NotifyIcon1
-            c(5) = Me.Button2
+            Dim del As Library.Chatget = AddressOf chatset
+            c(5) = del
+            Dim del1 As Library.ReconnBar = AddressOf reconnbar
+            c(6) = del1
 
             If (Command$().ToLower.Contains("-debug")) Then
                 c(3) = True
@@ -438,7 +447,16 @@ Partial Class MainWindow
             Application.Current.Shutdown()
         End If
     End Sub
-
+    Sub chatset()
+        Me.Dispatcher.Invoke(Sub() Me.Button2.Content = "Chat(!)")
+    End Sub
+    Sub reconnbar()
+        state1 = lib1.state
+        If state1 < 7 Then
+            Me.Dispatcher.Invoke(Sub() Me.ProgressBar1.Value = 50)
+        End If
+        Me.Dispatcher.Invoke(Sub() Me.Label5.Content = "Reconnecting to DTun4 Server")
+    End Sub
     Private Sub mutebutton_PreviewMouseDown(sender As Object, e As MouseButtonEventArgs) Handles mutebutton.PreviewMouseDown
         If mutebutton.Content = "unmute" Then
             mutebutton.Content = "mute"

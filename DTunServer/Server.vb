@@ -11,7 +11,8 @@ Module Server
     Dim clients As New List(Of IPEndPoint)
     Dim networks As New Dictionary(Of String, List(Of Client))
     Dim leaders As New Dictionary(Of String, IPEndPoint)
-    Dim log As New IO.StreamWriter("log.txt")
+    Dim log As New IO.StreamWriter("log.txt", True)
+    Dim t As Date
     Sub Main()
         Dim rsa As New RSACryptoServiceProvider()
         
@@ -25,105 +26,98 @@ Module Server
         timer.Start()
         timer.Enabled = True
 
-        log.WriteLine("Server started successfully")
+        log.WriteLine()
+        log.WriteLine(fTime() & "Server started successfully")
         log.Flush()
         While True
             Try
-                Try
-                    source = groupEP
-                    Dim packet As Byte() = listener.Receive(source)
-                    If Not clients.Contains(source) Then
+                source = groupEP
+                Dim packet As Byte() = listener.Receive(source)
+                If Not clients.Contains(source) Then
 
-                        Dim response As String() = Encoding.Default.GetString(packet).Split({"*"c}, 5)
-                        If Not response.GetUpperBound(0) = 4 Then
-                            log.WriteLine("Old version client")
-                            log.Flush()
-                            listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), source)
-                            Continue While
-                        End If
+                    Dim response As String() = Encoding.Default.GetString(packet).Split({"*"c}, 5)
+                    If Not response.GetUpperBound(0) = 4 Then
+                        log.WriteLine(fTime() & "Old version client")
+                        log.Flush()
+                        listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), source)
+                        Continue While
+                    End If
 
-                        clients.Add(source)
+                    clients.Add(source)
 
-                        Dim newip As String = ""
-                        If response(3) = "DONOTWANT" Then
-                            newip = String.Format("32.{0}.{1}.{2}", GetRandom(0, 255), GetRandom(0, 255), GetRandom(10, 250))
-                        Else
-                            newip = response(3)
-                        End If
+                    Dim newip As String = ""
+                    If response(3) = "DONOTWANT" Then
+                        newip = String.Format("32.{0}.{1}.{2}", GetRandom(0, 255), GetRandom(0, 255), GetRandom(10, 250))
+                    Else
+                        newip = response(3)
+                    End If
 
-                        If Not networks.ContainsKey(response(2)) Then
-                            networks(response(2)) = New List(Of Client)
-                            'leaders(response(2)) = New IPEndPoint(IPAddress.Parse("0.0.0.0"), 1)
-                            leaders(response(2)) = source
-                        End If
+                    If Not networks.ContainsKey(response(2)) Then
+                        networks(response(2)) = New List(Of Client)
+                        leaders(response(2)) = source
+                    End If
 
-                        networks(response(2)).Add(New Client(newip, source, response(1), response(2), rsa.Decrypt(System.Text.Encoding.Default.GetBytes(response(4)), True)))
-                        Dim mess As String = "HELO*" & newip & "*"
-                        For k As Integer = 0 To networks(response(2)).Count - 1
-                            mess &= networks(response(2))(k).Name & ":" & networks(response(2))(k).IP & "^"
+                    networks(response(2)).Add(New Client(newip, source, response(1), response(2), rsa.Decrypt(System.Text.Encoding.Default.GetBytes(response(4)), True)))
+                    Dim mess As String = "HELO*" & newip & "*"
+                    For k As Integer = 0 To networks(response(2)).Count - 1
+                        mess &= networks(response(2))(k).Name & ":" & networks(response(2))(k).IP & "^"
+                    Next
+
+                    listener.Send(Encoding.Default.GetBytes(mess), Encoding.Default.GetByteCount(mess), source)
+                    log.WriteLine(fTime() & "Added client from: " & source.Address.ToString & ":" & source.Port.ToString & " - " & response(1) & " network: " & response(2))
+                    log.Flush()
+
+                    Continue While
+                End If
+                Dim net As String = FindNetwork(source)
+
+                If (Encoding.Default.GetString(packet) = "INFOPLS") Then
+                    If net = "none" Then
+                        listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), source)
+                    Else
+                        Dim cl As Client = FindClient(source)
+                        Dim mess As String = "KFINE"
+                        For k As Integer = 0 To networks(net).Count - 1
+                            mess &= networks(net)(k).Name & ":" & networks(net)(k).IP & "^"
+                            If networks(net)(k).EndP.Equals(source) Then
+                                networks(net)(k).Time = 9
+                            End If
                         Next
 
-                        listener.Send(Encoding.Default.GetBytes(mess), Encoding.Default.GetByteCount(mess), source)
-                        log.WriteLine("Added client from: " & source.Address.ToString & ":" & source.Port.ToString & " - " & response(1))
-                        log.Flush()
-
-                        Continue While
-                    End If
-                    Dim net As String = FindNetwork(source)
-
-                    If (Encoding.Default.GetString(packet) = "INFOPLS") Then
-                        If net = "none" Then
-                            listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), source)
-                        Else
-                            Dim cl As Client = FindClient(source)
-                            Dim mess As String = "KFINE"
-                            For k As Integer = 0 To networks(net).Count - 1
-                                mess &= networks(net)(k).Name & ":" & networks(net)(k).IP & "^"
-                                If networks(net)(k).EndP.Equals(source) Then
-                                    networks(net)(k).Time = 9
+                        If cl.EndP.Address.ToString = leaders(net).Address.ToString And cl.EndP.Port = leaders(net).Port Then
+                            mess &= "*1.1.1.1:2*"
+                            For j As Integer = 0 To networks(net).Count - 1
+                                If networks(net).ElementAt(j).EndP.ToString <> leaders(net).ToString Then
+                                    mess &= networks(net).ElementAt(j).EndP.ToString & "|" & networks(net).ElementAt(j).Key & "|" & networks(net).ElementAt(j).IP & "^"
                                 End If
                             Next
-
-                            If cl.EndP.Address.ToString = leaders(net).Address.ToString And cl.EndP.Port = leaders(net).Port Then
-                                mess &= "*1.1.1.1:2*"
-                                For j As Integer = 0 To networks(net).Count - 1
-                                    If networks(net).ElementAt(j).EndP.ToString <> leaders(net).ToString Then
-                                        mess &= networks(net).ElementAt(j).EndP.ToString & "|" & networks(net).ElementAt(j).Key & "|" & networks(net).ElementAt(j).IP & "^"
-                                    End If
-                                Next
-                            Else
-                                mess &= "*" & leaders(net).Address.ToString & ":" & leaders(net).Port & "*"
-                            End If
-                            listener.Send(cl.Encrypt(Encoding.Default.GetBytes(mess)), cl.Encrypt(Encoding.Default.GetBytes(mess)).Count(), source)
+                        Else
+                            mess &= "*" & leaders(net).Address.ToString & ":" & leaders(net).Port & "*"
                         End If
-
-                        Console.Write("*")
-                        Continue While
+                        listener.Send(cl.Encrypt(Encoding.Default.GetBytes(mess)), cl.Encrypt(Encoding.Default.GetBytes(mess)).Count(), source)
                     End If
-                    If (Encoding.Default.GetString(packet) = "CSPLS") Then
-                        If FindClient(source).EndP.ToString = leaders(FindNetwork(source)).ToString Then
-                            leaders(FindNetwork(source)) = New IPEndPoint(IPAddress.Parse("0.0.0.0"), 1)
-                        End If
-                    End If
-                    'Dim cl As Client = FindClient(source)
-                    Dim pack As Byte() = FindClient(source).Decrypt(packet)
-                    For j As Integer = 0 To networks(net).Count - 1
-                        If Not networks(net)(j).EndP.Equals(source) Then
-                            Dim cl As Client = networks(net)(j)
-                            Try
-                                listener.Send(cl.Encrypt(pack), cl.Encrypt(pack).Count(), networks(net)(j).EndP)
-                            Catch
-                            End Try
-                        End If
-                    Next
-                    Console.Write("#")
-                Catch ex As System.Net.Sockets.SocketException
-                    log.WriteLine("Ex: " & ex.ToString)
-                    log.Flush()
-                End Try
 
+                    Console.Write("*")
+                    Continue While
+                End If
+                If (Encoding.Default.GetString(packet) = "CSPLS") Then
+                    If FindClient(source).EndP.ToString = leaders(FindNetwork(source)).ToString Then
+                        leaders(FindNetwork(source)) = New IPEndPoint(IPAddress.Parse("0.0.0.0"), 1)
+                    End If
+                End If
+                Dim pack As Byte() = FindClient(source).Decrypt(packet)
+                For j As Integer = 0 To networks(net).Count - 1
+                    If Not networks(net)(j).EndP.Equals(source) Then
+                        Dim cl As Client = networks(net)(j)
+                        Try
+                            listener.Send(cl.Encrypt(pack), cl.Encrypt(pack).Count(), networks(net)(j).EndP)
+                        Catch
+                        End Try
+                    End If
+                Next
+                Console.Write("#")
             Catch ex As Exception
-                log.WriteLine("Ex: " & ex.ToString)
+                log.WriteLine(fTime() & "Ex(receive): " & ex.ToString)
                 log.Flush()
             End Try
 
@@ -156,37 +150,48 @@ Module Server
     Sub Status()
 restart:
         For i As Integer = 0 To networks.Count - 1
-            If leaders(networks.ElementAt(i).Key).Port = 3 Then
-                leaders(networks.ElementAt(i).Key) = networks(networks.ElementAt(i).Key).ElementAt(0).EndP
-                'Console.WriteLine("No leader- new: {0}", leaders(networks.ElementAt(i).Value.ToString))
-            End If
-            If networks.ElementAt(i).Value.Count = 0 Then
-                networks.Remove(networks.ElementAt(i).Key)
-                GoTo restart
-            End If
-            For j As Integer = 0 To networks.ElementAt(i).Value.Count - 1
-                If networks.ElementAt(i).Value.ElementAt(j).Time > 0 Then
-                    networks(networks.ElementAt(i).Key).ElementAt(j).Time -= 1
-                    Continue For
+            Try
+                If networks.ElementAt(i).Value.Count = 0 Then
+                    networks.Remove(networks.ElementAt(i).Key)
+                    GoTo restart
                 End If
-                If networks.ElementAt(i).Value.ElementAt(j).Time <= 0 Then
-                    Try
-                        Console.Write("-" & networks.ElementAt(i).Value.ElementAt(j).Name)
-                        listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), networks.ElementAt(i).Value.ElementAt(j).EndP)
-                    Catch
-                    End Try
-                    clients.Remove(networks.ElementAt(i).Value.ElementAt(j).EndP)
-                    If leaders(networks.ElementAt(i).Key).ToString = networks.ElementAt(i).Value.ElementAt(j).EndP.ToString Then
-                        leaders(networks.ElementAt(i).Key) = New IPEndPoint(IPAddress.Parse("0.0.0.0"), 3)
+                If leaders(networks.ElementAt(i).Key).Port = 3 Then
+                    leaders(networks.ElementAt(i).Key) = networks(networks.ElementAt(i).Key).ElementAt(0).EndP
+                    log.WriteLine(fTime() & "New leader of: " & networks.ElementAt(i).Key & ": " & networks(networks.ElementAt(i).Key).ElementAt(0).EndP.ToString & " - " & networks(networks.ElementAt(i).Key).ElementAt(0).Name)
+                End If
+                For j As Integer = 0 To networks.ElementAt(i).Value.Count - 1
+                    If networks.ElementAt(i).Value.ElementAt(j).Time > 0 Then
+                        networks(networks.ElementAt(i).Key).ElementAt(j).Time -= 1
+                        Continue For
                     End If
-                    networks(networks.ElementAt(i).Key).Remove(networks.ElementAt(i).Value.ElementAt(j))
-                    'Console.WriteLine("removed leader")
-                    Continue For
-                End If
-            Next
+                    If networks.ElementAt(i).Value.ElementAt(j).Time <= 0 Then
+                        Try
+                            Console.Write("-" & networks.ElementAt(i).Value.ElementAt(j).Name)
+                            listener.Send(Encoding.Default.GetBytes("RECONNPLS"), Encoding.Default.GetByteCount("RECONNPLS"), networks.ElementAt(i).Value.ElementAt(j).EndP)
+                        Catch
+                        End Try
+                        log.WriteLine(fTime() & "Removed client from: " & networks.ElementAt(i).Value.ElementAt(j).EndP.ToString & " - " & networks.ElementAt(i).Value.ElementAt(j).Name & " network: " & networks.ElementAt(i).Value.ElementAt(j).Network)
+                        clients.Remove(networks.ElementAt(i).Value.ElementAt(j).EndP)
+                        If leaders(networks.ElementAt(i).Key).ToString = networks.ElementAt(i).Value.ElementAt(j).EndP.ToString Then
+                            leaders(networks.ElementAt(i).Key) = New IPEndPoint(IPAddress.Parse("0.0.0.0"), 3)
+                            log.WriteLine(fTime() & "Removed leader in network: " & networks.ElementAt(i).Key)
+                        End If
+                        networks(networks.ElementAt(i).Key).Remove(networks.ElementAt(i).Value.ElementAt(j))
+                        log.Flush()
+                        Continue For
+                    End If
+                Next
+            Catch ex As Exception
+                log.WriteLine(fTime() & "Ex(status): " & ex.ToString)
+                log.Flush()
+            End Try
         Next
     End Sub
 
+    Function fTime() As String
+        t = Now
+        Return t.Day & "." & t.Month & "." & t.Year & " " & t.Hour & ":" & t.Minute & ":" & t.Second & " "
+    End Function
     Public Function AES_Decrypt(ByVal in1 As Byte(), ByVal pass As Byte()) As Byte()
         Dim AES As New System.Security.Cryptography.AesManaged
         Try

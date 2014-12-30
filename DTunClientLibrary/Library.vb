@@ -29,9 +29,8 @@ Public Class Library
 #If DEBUG Then
     Dim remote As String = "192.168.1.2"
 #Else
-    Dim remote As String = "188.116.56.69"
+    Dim remote as String
 #End If
-
     Public updateusers As Boolean = False
     Public users As String()
     Public oldusers() As String = {""}
@@ -39,6 +38,8 @@ Public Class Library
     Dim serverrsa As New RSACryptoServiceProvider()
     Dim aespass(31) As Byte
     Public state As Integer = 0
+
+    Private hellostring As String
 
     Public Shared icon As System.Windows.Forms.NotifyIcon
 
@@ -48,8 +49,13 @@ Public Class Library
     Dim chatsender As New UdpClient()
 
     'Public Shared chatbutton As Windows.Forms.Button
-    Public Shared chatbutton
+    Public Delegate Sub Chatget()
+    Private chatbutton As Chatget
 
+    Public Delegate Sub ReconnBar()
+    Private reconn As ReconnBar
+
+    Private server As IPEndPoint()
     Private leader As New IPEndPoint(IPAddress.Parse("0.0.0.0"), 1)
     Public connected As Boolean = False
     Public leading As Boolean = False
@@ -67,6 +73,8 @@ Public Class Library
             log1.Close()
         End If
         log1 = New StreamWriter("log.txt", True)
+        log1.AutoFlush = True
+        log1.WriteLine()
         log1.WriteLine("Preparing...")
 
 
@@ -81,134 +89,139 @@ Public Class Library
         ih = New IconHelper
 
         chatbutton = c(5)
+        reconn = c(6)
 
         Dim w As New MyWebClient
         w.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11")
 #If Not Debug Then
-        remote = Dns.GetHostEntry("apps.disahome.me").AddressList(0).ToString
-#End If
-        If File.Exists("rsapubkey.txt") And log Then
-            serverrsa.FromXmlString(File.ReadAllText("rsapubkey.txt"))
-        Else
+        Try
             remote = Dns.GetHostEntry("apps.disahome.me").AddressList(0).ToString
-            Try
-                serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.me/data/rsapubkey.txt"))
-            Catch
+        Catch
+            MsgBox("No internet connection")
+            Exit Sub
+        End Try
+#End If
+            If File.Exists("rsapubkey.txt") And log Then
+                serverrsa.FromXmlString(File.ReadAllText("rsapubkey.txt"))
+            Else
+                remote = Dns.GetHostEntry("apps.disahome.me").AddressList(0).ToString
                 Try
                     serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.me/data/rsapubkey.txt"))
                 Catch
-                    state = 7
-                    MsgBox("Can't download server public RSA key.")
-                    Exit Sub
+                    Try
+                        serverrsa.FromXmlString(w.DownloadString("http://dtun4.disahome.me/data/rsapubkey.txt"))
+                    Catch
+                        state = 7
+                        MsgBox("Can't download server public RSA key.")
+                        Exit Sub
 
+                    End Try
                 End Try
-            End Try
-        End If
-        w.Dispose()
-
-        log1.WriteLine("Received IP and public key")
-        state = 1
-
-        Dim salt1(8) As Byte
-        Using rngCsp As New RNGCryptoServiceProvider()
-            rngCsp.GetBytes(salt1)
-        End Using
-
-        Dim k1 As New Rfc2898DeriveBytes(RandKey(32), salt1, 100000)
-        aespass = k1.GetBytes(32)
-        k1.Reset()
-        k1.Dispose()
-        aespass = Encoding.Default.GetBytes(Encoding.Default.GetString(aespass).Replace("|", ",").Replace("^", ".").Replace(":", "?").Replace("*", "l"))
-        If log Then
-            log1.WriteLine("Generated AES key - DEBUG - " & BitConverter.ToString(aespass).Replace("-", String.Empty))
-            log1.WriteLine("AES test: string = test = " & BitConverter.ToString(AES_Encrypt(Encoding.Default.GetBytes("test"))).Replace("-", String.Empty))
-            log1.WriteLine("AES test: string = " & BitConverter.ToString(AES_Decrypt(AES_Encrypt(Encoding.Default.GetBytes("test")))).Replace("-", String.Empty))
-        Else
-            log1.WriteLine("Generated AES key")
-        End If
-
-        log1.Flush()
-
-        If staticip Then
-            IP = getIP()
-            If IP = "0.0.0.0" Then
-                staticip = False
-                IP = "DONOTWANT"
             End If
-            If IP = "32.0.0.10" Then
-                IP = "DONOTWANT"
+            w.Dispose()
+
+            log1.WriteLine("Received IP and public key")
+            state = 1
+
+            Dim salt1(8) As Byte
+            Using rngCsp As New RNGCryptoServiceProvider()
+                rngCsp.GetBytes(salt1)
+            End Using
+
+            Dim k1 As New Rfc2898DeriveBytes(RandKey(32), salt1, 100000)
+            aespass = k1.GetBytes(32)
+            k1.Reset()
+            k1.Dispose()
+            aespass = Encoding.Default.GetBytes(Encoding.Default.GetString(aespass).Replace("|", ",").Replace("^", ".").Replace(":", "?").Replace("*", "l"))
+            If log Then
+                log1.WriteLine("Generated AES key - DEBUG - " & BitConverter.ToString(aespass).Replace("-", String.Empty))
+                log1.WriteLine("AES test: string = test = " & BitConverter.ToString(AES_Encrypt(Encoding.Default.GetBytes("test"))).Replace("-", String.Empty))
+                log1.WriteLine("AES test: string = " & BitConverter.ToString(AES_Decrypt(AES_Encrypt(Encoding.Default.GetBytes("test")))).Replace("-", String.Empty))
+            Else
+                log1.WriteLine("Generated AES key")
             End If
-        Else
-            IP = "DONOTWANT"
-        End If
 
 
-        state = 2
-        log1.WriteLine("Preparing...")
-
-        groupEP = New IPEndPoint(IPAddress.Parse(remote), 4955)
-        source = groupEP
-
-
-        state = 3
-        log1.WriteLine("Connecting to DTun4 Server")
-
-        Dim hellostring As String = String.Format("HELO*{0}*{1}*{2}*{3}", cname, nname, IP, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(aespass, True)))
-        listener.Send(Encoding.Default.GetBytes(hellostring), Encoding.Default.GetByteCount(hellostring), groupEP)
-
-        Dim response() As String = Encoding.Default.GetString(listener.Receive(source)).Split({"*"c}, 3)
-        IP = response(1)
-        users = response(2).Split("^")
-
-        updateusers = True
-        Shell("netsh interface ip set address name=DTun4 source=static addr=" & response(1) & " mask=255.0.0.0 gateway=none", AppWinStyle.Hide, True, -1)
-
-        thr = New Threading.Thread(AddressOf ReceivePacket)
-        thr.IsBackground = True
-
-
-        log1.WriteLine("Connected with server")
-        log1.WriteLine("Scanning for network devices...")
-        state = 4
-
-        log1.Flush()
-        Dim devices As CaptureDeviceList = CaptureDeviceList.Instance()
-        Dim chdev As Integer = -1
-
-        Dim i As Integer = -1
-        For Each dev As ICaptureDevice In devices
-            Dim info() As String = dev.ToString.Split(vbLf)
-            For j As Integer = 0 To info.GetUpperBound(0)
-                If info(j).Contains("FriendlyName: ") Then
-                    If info(j).Replace("FriendlyName: ", "").StartsWith("DTun4") Then
-                        chdev = i + 1
-                        Exit For
-                    End If
+            If staticip Then
+                IP = getIP()
+                If IP = "0.0.0.0" Then
+                    staticip = False
+                    IP = "DONOTWANT"
                 End If
+                If IP = "32.0.0.10" Then
+                    IP = "DONOTWANT"
+                End If
+            Else
+                IP = "DONOTWANT"
+            End If
+
+
+            state = 2
+            log1.WriteLine("Preparing...")
+
+            groupEP = New IPEndPoint(IPAddress.Parse(remote), 4955)
+            source = groupEP
+
+
+            state = 3
+            log1.WriteLine("Connecting to DTun4 Server")
+
+            hellostring = String.Format("HELO*{0}*{1}*{2}*{3}", cname, nname, IP, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(aespass, True)))
+            listener.Send(Encoding.Default.GetBytes(hellostring), Encoding.Default.GetByteCount(hellostring), groupEP)
+
+            Dim response() As String = Encoding.Default.GetString(listener.Receive(source)).Split({"*"c}, 3)
+            IP = response(1)
+
+            hellostring = String.Format("HELO*{0}*{1}*{2}*{3}", cname, nname, IP, System.Text.Encoding.Default.GetString(serverrsa.Encrypt(aespass, True)))
+
+            users = response(2).Split("^")
+
+            updateusers = True
+            Shell("netsh interface ip set address name=DTun4 source=static addr=" & response(1) & " mask=255.0.0.0 gateway=none", AppWinStyle.Hide, True, -1)
+
+            thr = New Threading.Thread(AddressOf ReceivePacket)
+            thr.IsBackground = True
+
+
+            log1.WriteLine("Connected with server")
+            log1.WriteLine("Scanning for network devices...")
+            state = 4
+
+            Dim devices As CaptureDeviceList = CaptureDeviceList.Instance()
+            Dim chdev As Integer = -1
+
+            Dim i As Integer = -1
+            For Each dev As ICaptureDevice In devices
+                Dim info() As String = dev.ToString.Split(vbLf)
+                For j As Integer = 0 To info.GetUpperBound(0)
+                    If info(j).Contains("FriendlyName: ") Then
+                        If info(j).Replace("FriendlyName: ", "").StartsWith("DTun4") Then
+                            chdev = i + 1
+                            Exit For
+                        End If
+                    End If
+                Next
+                i += 1
             Next
-            i += 1
-        Next
-        If chdev = -1 Then
-            log1.WriteLine("DTun adapter was not found. Try reinstalling WinPcap.")
-            MsgBox("DTun adapter was not found. Try reinstalling WinPcap.")
-            state = 7
-            Exit Sub
-        End If
-        log1.WriteLine("Device found. Connecting...")
-        state = 5
+            If chdev = -1 Then
+                log1.WriteLine("DTun adapter was not found. Try reinstalling WinPcap.")
+                MsgBox("DTun adapter was not found. Try reinstalling WinPcap.")
+                state = 7
+                Exit Sub
+            End If
+            log1.WriteLine("Device found. Connecting...")
+            state = 5
 
 
-        device = devices(chdev)
-        AddHandler device.OnPacketArrival, New SharpPcap.PacketArrivalEventHandler(AddressOf HandlePacket)
-        device.Open(DeviceMode.Normal, 1)
-        device.StartCapture()
-        thr.Start()
-        log1.WriteLine("Connected with device.")
-        log1.WriteLine("Working...")
-        log1.WriteLine()
-        state = 6
-        conn = True
-        log1.Flush()
+            device = devices(chdev)
+            AddHandler device.OnPacketArrival, New SharpPcap.PacketArrivalEventHandler(AddressOf HandlePacket)
+            device.Open(DeviceMode.Normal, 1)
+            device.StartCapture()
+            thr.Start()
+            log1.WriteLine("Connected with device.")
+            log1.WriteLine("Working...")
+            state = 6
+            conn = True
     End Sub
     Public Shared Function getIP()
         Dim strHostName As String = System.Net.Dns.GetHostName()
@@ -258,11 +271,6 @@ Public Class Library
             Exit Sub
         End If
 
-        If log Then
-            log1.Flush()
-        End If
-
-
     End Sub
 
     Public Sub SendMessage(mes As String)
@@ -290,10 +298,11 @@ Public Class Library
 
                 Dim message As String = Encoding.Default.GetString(packet)
                 If (message.StartsWith("RECONNPLS")) Then
-                    conn = False
-                    thr.Abort()
-                    device.StopCapture()
-                    Exit Sub
+                    RecoverConnection()
+                    'conn = False
+                    'thr.Abort()
+                    'device.StopCapture()
+                    'Exit Sub
                 End If
 
                 If iptable.ContainsKey(source) Then
@@ -403,13 +412,13 @@ Public Class Library
                     End If
 
                     If message.Contains("CHAT") Then
-                        chatlines.Add(ip1.SourceAddress.ToString & ":" & message.Substring(message.IndexOf("C")).Replace("CHAT", ""))
+                        chatlines.Add(ip1.SourceAddress.ToString & ":" & message.Substring(message.IndexOf("CHAT")).Replace("CHAT", ""))
                         log1.WriteLine("Created chat message from {0}", ip1.SourceAddress.ToString)
                         'My.Computer.Audio.PlaySystemSound(Media.SystemSounds.Hand)
-                        If message.Substring(message.IndexOf("C")).Replace("CHAT", "").Length > 3 And speech.Volume > 0 Then
-                            speech.SpeakAsync(message.Substring(message.IndexOf("C")).Replace("CHAT", ""))
+                        If message.Substring(message.IndexOf("CHAT")).Replace("CHAT", "").Length > 3 And speech.Volume > 0 Then
+                            speech.SpeakAsync(message.Substring(message.IndexOf("CHAT")).Replace("CHAT", ""))
                         End If
-                        chatbutton.Content = "Chat (!)"
+                        chatbutton.Invoke()
                         Continue While
                     End If
                     If message.Contains("DTun4CM-REQ") Then
@@ -452,13 +461,11 @@ Public Class Library
                         End If
                     End If
 
-                    '
                     If log Then
                         log1.WriteLine("*ARP from {0}", arp.SenderProtocolAddress.ToString)
                     End If
                 End If
 
-                log1.Flush()
             Catch e As Exception
             End Try
         End While
@@ -575,7 +582,19 @@ Public Class Library
         Dim groupEP As New IPEndPoint(IPAddress.Parse(remote), 4955)
         listener.Send(text, text.Count(), groupEP)
     End Sub
+    Sub RecoverConnection()
+        state = 3
+        reconn.Invoke()
+        log1.WriteLine("Reconnecting to DTun4 Server")
 
+        listener.Send(Encoding.Default.GetBytes(hellostring), Encoding.Default.GetByteCount(hellostring), groupEP)
+        Dim response() As String = Encoding.Default.GetString(listener.Receive(source)).Split({"*"c}, 3)
+        users = response(2).Split("^")
+        updateusers = True
+
+        log1.WriteLine("Reconnected to the server")
+        state = 6
+    End Sub
 
 
 
