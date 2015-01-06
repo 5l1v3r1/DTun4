@@ -150,7 +150,7 @@ Partial Class MainWindow
             ElseIf state1 = 1 Then
                 Label5.Content = "Generating AES key..."
             ElseIf state1 = 2 Then
-                Label5.Content = "Conducting DSTUN experiment"
+                Label5.Content = "Preparing..."
             ElseIf state1 = 3 Then
                 Label5.Content = "Connecting to DTun4 Server"
             ElseIf state1 = 4 Then
@@ -331,6 +331,11 @@ Partial Class MainWindow
 
     End Sub
     Private Sub MetroWindow_Closing(sender As Object, e As System.ComponentModel.CancelEventArgs)
+        If Not lib1 Is Nothing Then
+            System.IO.File.WriteAllText(lib1.hpath, lib1.hostsold)
+        End If
+
+
         NotifyIcon1.Visible = False
         My.Settings.tb1 = TextBox1.Text
         My.Settings.tb2 = TextBox2.Text

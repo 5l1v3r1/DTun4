@@ -47,8 +47,9 @@
     <Reference Include="PacketDotNet">
       <HintPath>F:\Users\Karol\Documents\Visual Studio 2012\Projects\DisPacketAnalyzer\DisPacketAnalyzer\bin\Release\PacketDotNet.dll</HintPath>
     </Reference>
-    <Reference Include="SharpPcap">
-      <HintPath>F:\Users\Karol\Documents\Visual Studio 2012\Projects\DisPacketAnalyzer\DisPacketAnalyzer\bin\Release\SharpPcap.dll</HintPath>
+    <Reference Include="SharpPcap, Version=4.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\SharpPcap.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
