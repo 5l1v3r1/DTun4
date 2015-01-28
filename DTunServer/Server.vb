@@ -104,6 +104,7 @@ Module Server
                     If FindClient(source).EndP.ToString = leaders(FindNetwork(source)).ToString Then
                         leaders(FindNetwork(source)) = New IPEndPoint(IPAddress.Parse("0.0.0.0"), 1)
                     End If
+                    Continue While
                 End If
                 Dim pack As Byte() = FindClient(source).Decrypt(packet)
                 For j As Integer = 0 To networks(net).Count - 1
