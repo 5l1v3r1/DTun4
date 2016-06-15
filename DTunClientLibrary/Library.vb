@@ -76,7 +76,15 @@ Public Class Library
         If Not log1 Is Nothing Then
             log1.Close()
         End If
-        log1 = New StreamWriter("log.txt", True)
+        Try
+            log1 = New StreamWriter("log.txt", True)
+        Catch
+            Try
+                log1 = New StreamWriter(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + "\DTun4\log.txt", True)
+            Catch
+                log1 = New StreamWriter(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + "\DTun4\log.txt", True)
+            End Try
+        End Try
         log1.AutoFlush = True
         log1.WriteLine()
         log1.WriteLine("Preparing...")
@@ -168,10 +176,15 @@ Public Class Library
 
 
         hpath = Environment.SystemDirectory & "\" & "drivers\etc\hosts"
-        hostsold = File.ReadAllText(hpath)
-        If hostsold.Contains("#DTun4#") Then
-            hostsold = hostsold.Remove(hostsold.IndexOf("#DTun4"))
-        End If
+        Try
+            hostsold = File.ReadAllText(hpath)
+            If hostsold.Contains("#DTun4#") Then
+                hostsold = hostsold.Remove(hostsold.IndexOf("#DTun4"))
+            End If
+        Catch
+            log1.WriteLine("Error writing to HOSTS. Are you running Windows XP?")
+        End Try
+
 
         state = 3
         log1.WriteLine("Connecting to DTun4 Server")
@@ -193,7 +206,11 @@ Public Class Library
             End If
             hostsadd = hostsadd & users(ii).Split(":")(1) & "   " & users(ii).Split(":")(0) & ".DTun" & vbNewLine
         Next
-        File.WriteAllText(hpath, hostsold & hostsadd)
+
+        Try
+            File.WriteAllText(hpath, hostsold & hostsadd)
+        Catch
+        End Try
 
         updateusers = True
         Shell("netsh interface ip set address name=DTun4 source=static addr=" & response(1) & " mask=255.0.0.0 gateway=none", AppWinStyle.Hide, True, -1)
@@ -238,6 +255,9 @@ Public Class Library
         device.StartCapture()
         thr.Start()
         log1.WriteLine("Connected with device.")
+
+        speech.Volume = 0
+
         log1.WriteLine("Working...")
         state = 6
         conn = True
@@ -366,7 +386,10 @@ Public Class Library
                             End If
                             hostsadd = hostsadd & users(i).Split(":")(1) & "   " & users(i).Split(":")(0) & ".DTun" & vbNewLine
                         Next
-                        File.WriteAllText(hpath, hostsold & hostsadd)
+                        Try
+                            File.WriteAllText(hpath, hostsold & hostsadd)
+                        Catch
+                        End Try
                         oldusers = users
                         updateusers = True
                     End If
@@ -681,7 +704,7 @@ Public Class Library
     End Function
 
     Private Function RandKey(RequiredStringLength As Integer) As String
-        Dim CharArray() As Char = "(CMWXp),./<123wxyz!@#$%^[]{hijkOPY&*>0ab':Z67cKLsQRSEFGHIJ?;8TUdefg-=_+4vmnoV5ABqrD9tul}\|".ToCharArray
+        Dim CharArray() As Char = "Mqr123wxyz!@(CabD9tWXp),./<':Z67cKLsQRSE#$%^[]{hijkOPY&*>0FGHg-=_+4vmnIJ?;8TUdefoV5ABul}\|".ToCharArray
         Dim sb As New System.Text.StringBuilder
 
         For index As Integer = 1 To RequiredStringLength

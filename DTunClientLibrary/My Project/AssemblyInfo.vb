@@ -12,7 +12,7 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyDescription("DTun4")> 
 <Assembly: AssemblyCompany("Disa")> 
 <Assembly: AssemblyProduct("DTun4")> 
-<Assembly: AssemblyCopyright("Copyright ©  2014")> 
+<Assembly: AssemblyCopyright("Copyright ©  2014-2016")> 
 <Assembly: AssemblyTrademark("")> 
 
 <Assembly: ComVisible(False)>
@@ -31,5 +31,5 @@ Imports System.Runtime.InteropServices
 ' by using the '*' as shown below:
 ' <Assembly: AssemblyVersion("1.0.*")> 
 
-<Assembly: AssemblyVersion("3.5")> 
-<Assembly: AssemblyFileVersion("3.5")> 
+<Assembly: AssemblyVersion("4.0")> 
+<Assembly: AssemblyFileVersion("4.0")> 

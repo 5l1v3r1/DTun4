@@ -105,6 +105,14 @@ Partial Class MainWindow
         AddHandler client.Closed, AddressOf client_Closed
 
         ListBox1.AddHandler(UIElement.MouseDownEvent, New MouseButtonEventHandler(AddressOf ListBox1_MouseDown), True)
+
+
+        If (Command$().ToLower.Contains("-conn ")) Then
+            Dim network As String = Command$().Remove(0, Command$().IndexOf("-conn ") + 15)
+            network = network.Remove(network.Length() - 2)
+            TextBox1.Text = network
+            Button1_MouseDown(Nothing, Nothing)
+        End If
     End Sub
     Sub error1(ByVal type As Integer)
         Dim task As task
@@ -332,7 +340,10 @@ Partial Class MainWindow
     End Sub
     Private Sub MetroWindow_Closing(sender As Object, e As System.ComponentModel.CancelEventArgs)
         If Not lib1 Is Nothing Then
-            System.IO.File.WriteAllText(lib1.hpath, lib1.hostsold)
+            Try
+                System.IO.File.WriteAllText(lib1.hpath, lib1.hostsold)
+            Catch
+            End Try
         End If
 
 
@@ -447,9 +458,12 @@ Partial Class MainWindow
             Timer1.Start()
             Button1.Content = "Disconnect"
         ElseIf Button1.Content = "Disconnect" Then
-            restart = True
-            Windows.Forms.Application.Restart()
-            Application.Current.Shutdown()
+            Try
+                restart = True
+                Windows.Forms.Application.Restart()
+                Application.Current.Shutdown()
+            Catch
+            End Try
         End If
     End Sub
     Sub chatset()

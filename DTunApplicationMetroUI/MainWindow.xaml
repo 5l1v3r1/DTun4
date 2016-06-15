@@ -53,7 +53,7 @@
             </ListBox.ItemTemplate>
         </ListBox>
         <Label x:Name="Label10" Content="" HorizontalAlignment="Left" Margin="190,397,0,0" VerticalAlignment="Top" IsEnabled="False" Width="95"/>
-        <Button x:Name="mutebutton" Content="mute" HorizontalAlignment="Left" Margin="148,187,0,0" VerticalAlignment="Top" Width="54" Style="{DynamicResource SquareButtonStyle}" Height="28" IsEnabled="False"/>
+        <Button x:Name="mutebutton" Content="unmute" HorizontalAlignment="Left" Margin="148,187,0,0" VerticalAlignment="Top" Width="54" Style="{DynamicResource SquareButtonStyle}" Height="28" IsEnabled="False"/>
     </Grid>
 
 </controls:MetroWindow>
