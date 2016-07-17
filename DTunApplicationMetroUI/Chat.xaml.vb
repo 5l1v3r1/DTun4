@@ -26,28 +26,32 @@ Public Class Chat
         Timer1.Start()
         TextBox1.Focus()
     End Sub
-    Private Sub Timer1_Tick(sender As Object, e As EventArgs)
-        Try
-            If Not MainWindow.lib1.chatlines.Count = chatlines1.Count Then
-                For i As Integer = chatlines1.Count To MainWindow.lib1.chatlines.Count - 1
-                    Dim mes As String() = Split(MainWindow.lib1.chatlines(i), {":"c}, 2)
-                    For j As Integer = 0 To MainWindow.lib1.users.Count - 1
-                        If MainWindow.lib1.users(j).Contains(mes(0)) Then
-                            mes(0) = MainWindow.lib1.users(j).Split(":")(0)
-                            Exit For
-                        End If
-                    Next
-                    RichTextBox1.AppendText(vbNewLine & mes(0) & ": " & mes(1))
-                Next
-                chatlines1 = New List(Of String)(MainWindow.lib1.chatlines)
-                Format()
-                ScrollToBottom(RichTextBox1)
+	Private Sub Timer1_Tick(sender As Object, e As EventArgs)
+		Try
+			If Not MainWindow.lib1.chatlines.Count = chatlines1.Count Then
+				For i As Integer = chatlines1.Count To MainWindow.lib1.chatlines.Count - 1
+					Dim mes As String() = Split(MainWindow.lib1.chatlines(i), {":"c}, 2)
+					For j As Integer = 0 To MainWindow.lib1.users.Count - 1
+						If MainWindow.lib1.users(j).Contains(mes(0)) Then
+							mes(0) = MainWindow.lib1.users(j).Split(":")(0)
+							Exit For
+						End If
+					Next
+					RichTextBox1.AppendText(vbNewLine & mes(0) & ": " & mes(1))
+				Next
+				chatlines1 = New List(Of String)(MainWindow.lib1.chatlines)
+				Format()
+				ScrollToBottom(RichTextBox1)
 
-            End If
-        Catch
-        End Try
-    End Sub
-    Sub Format()
+			End If
+		Catch
+		End Try
+	End Sub
+
+	''' <summary>
+	''' Color is random, but same for each clients as it's 4 first numbers of MD5 hash of the clientname
+	''' </summary>
+	Sub Format()
         Dim lines() As String = RichTextBox1.Text.Split(vbLf)
         Dim startIndex As Integer = 0
         For i As Integer = 0 To lines.Length - 1
@@ -73,17 +77,23 @@ Public Class Chat
     End Function
 
 
-    <DllImport("user32.dll", CharSet:=CharSet.Auto)> _
+	<DllImport("user32.dll", CharSet:=CharSet.Auto)> _
     Private Shared Function SendMessage(hWnd As IntPtr, wMsg As Integer, wParam As IntPtr, lParam As IntPtr) As Integer
     End Function
     Private Const WM_VSCROLL As Integer = 277
     Private Const SB_PAGEBOTTOM As Integer = 7
 
-    Public Shared Sub ScrollToBottom(MyRichTextBox As Windows.Forms.RichTextBox)
+	''' <summary>
+	''' Autoscrolling
+	''' </summary>
+	Public Shared Sub ScrollToBottom(MyRichTextBox As Windows.Forms.RichTextBox)
         SendMessage(MyRichTextBox.Handle, WM_VSCROLL, SB_PAGEBOTTOM, IntPtr.Zero)
     End Sub
 
-    Private Sub RichTextBox1_LinkClicked(sender As Object, e As Forms.LinkClickedEventArgs) Handles RichTextBox1.LinkClicked
-        System.Diagnostics.Process.Start(e.LinkText)
-    End Sub
+	''' <summary>
+	''' Link handler
+	''' </summary>
+	Private Sub RichTextBox1_LinkClicked(sender As Object, e As Forms.LinkClickedEventArgs) Handles RichTextBox1.LinkClicked
+		System.Diagnostics.Process.Start(e.LinkText) 'just pass the link
+	End Sub
 End Class

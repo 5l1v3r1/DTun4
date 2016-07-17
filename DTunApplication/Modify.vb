@@ -1,5 +1,8 @@
 ﻿Imports System.Runtime.InteropServices
 
+''' <summary>
+''' For ProgressBar colors
+''' </summary>
 Module Modify
     Private Declare Function SendMessage Lib "User32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Long) As Long
 

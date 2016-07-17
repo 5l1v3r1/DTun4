@@ -1,0 +1,116 @@
+4.0 (15.06.2016)
+
+	+HOSTS bug fix
+	+Log bug fix
+	+Protocol handler: enter DTun4://networkname/ to automatically connect to the networkname/+
+	-Speech synthesiser is default off
+	+Various fixes
+
+3.6 (22.06.2015)
+
+	+Win XP small fix
+
+3.5 (6.01.2015)
+
+	+Instead of typing virtual IP you can enter NAME.DTun as IP, which will be resolved to DTun4 IP of client with given name
+	
+3.4 (30.12.2014)
+
+	+Reconnecting after error without restart
+	-Server fixes
+	-Chat fixes
+	
+3.2 (22.12.2014)
+
+	-Stability fixes
+	+Allowed Client-Server connections when at least one of clients in unreachable
+	
+3.1 (18.12.2014)
+
+	+SpeechSynthesizer added for incoming chat messages
+	
+3.0 (16.12.2014)
+
+	-Fixes for beta version
+	
+3.0b(4.12.2014)
+
+	-New IP pool - 32.x.x.x/8, old(31.x.x.x/8) was causing problems with certain webpages
+	-Removed STUN experiment module
+	-Debug mode fixes
+	-Nondebug log file will be much smaller now
+	+P2P connections for all networks, data will skip server, control packets will still be sent via DTun4 Server
+	+Control packet encryption
+	
+2.4 (27.11.2014)
+
+	+Added STUN experiment module
+	-Server fixes
+	
+2.2 (7.08.2014)
+
+	-Security fixes
+	+Performance fixes(pings should be much lower now)
+	-Server fixes
+	
+2.1 (6.08.2014)
+
+	-Security fixes
+	+Password generation fixes
+	+Performance fixes
+	-Server fixes
+	
+2.0 (5.08.2014)
+
+	-Error display fixes
+	
+2.0b(31.07.2014)
+
+	-Small UI fixes
+	
+2.0a(29.07.2014)
+
+	-UI fixes
+	
+1.6 (4.05.2014)
+
+	+Self-repair mode
+	-Chat fixes
+	-Interface installator fixes
+	-Status icon fixes
+	-UI fixes
+	+Debug mode features
+	-Server fixes
+	-Server keys generator added
+	-Updater fixes
+	-UI performance fixes
+	
+1.5 (23.04.2014)
+
+	-Chat fixes
+	+Status icon with state(receiving, sending)
+	
+1.4 (19.04.2014)
+
+	+Splashscreen for updater
+	-Debug mode features
+	-Performance fixes
+	+Interface installer now works for both 64 and 32
+	+x64 fixes
+	-Stability fixes
+	-Reconnect time decreased
+	-Windows XP fixes
+	
+1.3 (17.04.2014)
+
+	-Windows XP fixes
+	-Chat added
+	-UI fixes
+	
+1.2 (13.04.2014)
+
+	+Added security(RSA + AES encryption)
+	
+1.1 (30.03.2014)
+
+	+First public release

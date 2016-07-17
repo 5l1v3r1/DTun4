@@ -4,7 +4,9 @@ Imports System.Text
 Imports System.IO
 Imports System.Drawing.Imaging
 
-
+''' <summary>
+''' Custom ClientListBox for better compability with custom elements
+''' </summary>
 Public Class ClientListBox
 
 
