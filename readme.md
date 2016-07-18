@@ -16,21 +16,24 @@ Just use Visual Studio, any version above 2013 should work.
 Code needs security audition
 
 ## Used components
-*MahApps.Metro is under the Microsoft Public License (Ms-PL)
-*SharpPcap 4.2 is under the GNU Library or Lesser General Public License version 3.0 (LGPLv3) license 
-*Packet.Net 0.13 is under the GNU Library or Lesser General Public License version 3.0 (LGPLv3) license 
-*TUN/TAP Driver from OpenVPN is under the GPL version 2 license.
+* MahApps.Metro is under the Microsoft Public License (Ms-PL)
+* SharpPcap 4.2 is under the GNU Library or Lesser General Public License version 3.0 (LGPLv3) license 
+* PacketDotNet 0.13 is under the GNU Library or Lesser General Public License version 3.0 (LGPLv3) license 
+* TUN/TAP Driver from OpenVPN is under the GPL version 2 license.
 
 ## License
 GNU General Public License v3.0
 
 ## FAQ
-*Could the data be seen outside of the network
+* Could the data be seen outside of the network
+
 I have done my best to use crypto functions properly, but it needs auditioning to be sure. 
 Also no data is stored on server as you may see in source code.
-*I have a feature/bug/request
+* I have a feature/bug/request
+
 Use issue tracker, I will try to fix it. Or if you already know how to fix it, you can do a pull request.
-*I have found a critical bug
+* I have found a critical bug
+
 I would be very grateful if you mail me ASAP
 
 ## Give me feedback
