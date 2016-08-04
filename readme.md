@@ -1,5 +1,6 @@
 DTun4
 =================
+[![Build status](https://ci.appveyor.com/api/projects/status/8s5xlel0y1ojieiw?svg=true)](https://ci.appveyor.com/project/disaderp/dtun4)
 DTun4 is hosted VPN service designed to allow gamers host their game servers without obligation to have public IP. 
 Your traffic is also secured by AES and RSA encryption. 
 You can connect to computers within the same network anytime, distance is not a problem.
