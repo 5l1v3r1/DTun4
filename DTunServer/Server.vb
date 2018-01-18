@@ -55,8 +55,8 @@ Module Server
                     End If
 
                     If Not networks.ContainsKey(response(2)) Then
-                        networks(response(2)) = New List(Of Client)
-                        leaders(response(2)) = source
+                        networks.Add(response(2), New List(Of Client))
+                        leaders.Add(response(2), source)
                     End If
 
                     networks(response(2)).Add(New Client(newip, source, response(1), response(2), rsa.Decrypt(Convert.FromBase64String(response(4)), True)))
