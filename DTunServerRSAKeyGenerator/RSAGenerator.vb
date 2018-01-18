@@ -1,5 +1,6 @@
 ﻿Imports System.Security.Cryptography
 
+
 Module RSAGenerator
     Sub Main()
         Console.Write("Enter keysize: ")

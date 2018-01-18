@@ -2,6 +2,7 @@
 Imports System.Net
 Imports System.Text
 Imports System.Security.Cryptography
+Imports ArpanTECH
 
 Module Server
     Dim listener As UdpClient = New UdpClient(4955)
@@ -11,12 +12,12 @@ Module Server
     Dim clients As New List(Of IPEndPoint)
     Dim networks As New Dictionary(Of String, List(Of Client))
     Dim leaders As New Dictionary(Of String, IPEndPoint)
-    Dim log As New IO.StreamWriter("log.txt", True)
+    Dim log As New System.IO.StreamWriter("log.txt", True)
     Dim t As Date
     Sub Main()
         Dim rsa As New RSACryptoServiceProvider()
-        
         rsa.FromXmlString(System.IO.File.ReadAllText("priv.key"))
+
 
         groupEP = New IPEndPoint(IPAddress.Any, 4955)
         Dim timer As New System.Timers.Timer
@@ -29,13 +30,14 @@ Module Server
         log.WriteLine()
         log.WriteLine(fTime() & "Server started successfully")
         log.Flush()
+        Dim response As String()
         While True
             Try
                 source = groupEP
                 Dim packet As Byte() = listener.Receive(source)
                 If Not clients.Contains(source) Then
 
-                    Dim response As String() = Encoding.Default.GetString(packet).Split({"*"c}, 5)
+                    response = Encoding.UTF8.GetString(packet).Split({"*"c}, 5)
                     If Not response.GetUpperBound(0) = 4 Then
                         log.WriteLine(fTime() & "Old version client")
                         log.Flush()
@@ -57,7 +59,7 @@ Module Server
                         leaders(response(2)) = source
                     End If
 
-                    networks(response(2)).Add(New Client(newip, source, response(1), response(2), rsa.Decrypt(System.Text.Encoding.Default.GetBytes(response(4)), True)))
+                    networks(response(2)).Add(New Client(newip, source, response(1), response(2), rsa.Decrypt(Convert.FromBase64String(response(4)), True)))
                     Dim mess As String = "HELO*" & newip & "*"
                     For k As Integer = 0 To networks(response(2)).Count - 1
                         mess &= networks(response(2))(k).Name & ":" & networks(response(2))(k).IP & "^"
@@ -205,7 +207,7 @@ restart:
         End Try
     End Function
     Public Function AES_Encrypt(ByVal in1 As Byte(), ByVal pass As Byte()) As Byte()
-       Dim AES As New System.Security.Cryptography.AesManaged
+        Dim AES As New System.Security.Cryptography.AesManaged
         Try
             AES.Key = pass
             AES.Mode = CipherMode.ECB
