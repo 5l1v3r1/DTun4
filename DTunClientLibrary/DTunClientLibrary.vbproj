@@ -55,9 +55,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\PacketDotNet.dll</HintPath>
     </Reference>
-    <Reference Include="RSAx">
-      <HintPath>..\RSAx.dll</HintPath>
-    </Reference>
     <Reference Include="SharpPcap, Version=4.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\SharpPcap.dll</HintPath>

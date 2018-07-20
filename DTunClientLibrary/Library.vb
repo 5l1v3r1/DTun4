@@ -7,7 +7,6 @@ Imports PacketDotNet
 Imports System.Security.Cryptography
 Imports System.Speech.Synthesis
 Imports SharpRaven.Data
-Imports ArpanTECH
 
 ''' <summary>
 ''' Used for custom leaders
